@@ -39,7 +39,7 @@ export async function runCollection(options: RunOptions = {}) {
   const results: AdapterResult[] = [];
   for (const adapter of selected) {
     try {
-      const result = await adapter.collect({ areaSlug: area.slug, administrativeDongCode: area.administrativeDongCode, legalDongCode: area.legalDongCode, dongName: area.dongName, apiKey: environment.SEOUL_OPEN_API_KEY!, now: new Date() });
+      const result = await adapter.collect({ areaSlug: area.slug, cityName: area.cityName, districtName: area.districtName, administrativeDongCode: area.administrativeDongCode, legalDongCode: area.legalDongCode, dongName: area.dongName, apiKey: environment.SEOUL_OPEN_API_KEY!, now: new Date() });
       if (!environment.DATABASE_URL) throw new Error("live 수집 결과를 반영하려면 DATABASE_URL이 필요합니다.");
       await persistAdapterResult(area.slug, result, environment.SAVE_RAW_RESPONSES === "true");
       results.push(result);

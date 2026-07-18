@@ -4,6 +4,21 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { AdapterResult } from "@/lib/collection/types";
 import { getPrismaClient } from "@/lib/db/client";
 
+const observationStatuses = {
+  loading: ObservationStatus.LOADING,
+  success: ObservationStatus.SUCCESS,
+  empty: ObservationStatus.EMPTY,
+  stale: ObservationStatus.STALE,
+  error: ObservationStatus.ERROR,
+  mock: ObservationStatus.MOCK,
+  partial_success: ObservationStatus.PARTIAL_SUCCESS,
+  unsupported_geography: ObservationStatus.UNSUPPORTED_GEOGRAPHY,
+  insufficient_sample: ObservationStatus.INSUFFICIENT_SAMPLE,
+  unverified: ObservationStatus.UNVERIFIED,
+  manual_verification_required: ObservationStatus.MANUAL_VERIFICATION_REQUIRED,
+  restricted_data: ObservationStatus.RESTRICTED_DATA,
+} as const;
+
 export async function persistAdapterResult(areaSlug: string, result: AdapterResult, saveRaw: boolean) {
   const prisma = getPrismaClient();
   const [area, source] = await Promise.all([
@@ -16,10 +31,11 @@ export async function persistAdapterResult(areaSlug: string, result: AdapterResu
     for (const indicator of result.indicators) {
       if (!indicator.baseDate) continue;
       const definition = await prisma.indicatorDefinition.findUniqueOrThrow({ where: { code: indicator.code } });
+      const observationStatus = observationStatuses[indicator.status];
       await prisma.indicatorObservation.upsert({
         where: { areaId_indicatorId_baseDate_aggregationKey: { areaId: area.id, indicatorId: definition.id, baseDate: new Date(`${indicator.baseDate}T00:00:00+09:00`), aggregationKey: "total" } },
-        update: { value: indicator.value, collectedAt: new Date(), status: indicator.status === "mock" ? ObservationStatus.MOCK : ObservationStatus.SUCCESS, sourceReference: indicator.sourceUrl, metadata: { series: indicator.series } as unknown as Prisma.InputJsonValue },
-        create: { areaId: area.id, indicatorId: definition.id, value: indicator.value, baseDate: new Date(`${indicator.baseDate}T00:00:00+09:00`), aggregationKey: "total", geographicUnit: indicator.geographicUnit, status: indicator.status === "mock" ? ObservationStatus.MOCK : ObservationStatus.SUCCESS, sourceReference: indicator.sourceUrl, metadata: { series: indicator.series } as unknown as Prisma.InputJsonValue },
+        update: { value: indicator.value, collectedAt: new Date(), status: observationStatus, sourceReference: indicator.sourceUrl, metadata: { series: indicator.series, statusMessage: indicator.statusMessage } as unknown as Prisma.InputJsonValue },
+        create: { areaId: area.id, indicatorId: definition.id, value: indicator.value, baseDate: new Date(`${indicator.baseDate}T00:00:00+09:00`), aggregationKey: "total", geographicUnit: indicator.geographicUnit, status: observationStatus, sourceReference: indicator.sourceUrl, metadata: { series: indicator.series, statusMessage: indicator.statusMessage } as unknown as Prisma.InputJsonValue },
       });
       saved += 1;
     }

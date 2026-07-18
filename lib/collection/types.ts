@@ -4,6 +4,8 @@ export type CollectionCycle = "daily" | "monthly" | "quarterly";
 
 export interface CollectionContext {
   areaSlug: string;
+  cityName: string;
+  districtName: string;
   administrativeDongCode: string;
   legalDongCode: string;
   dongName: string;

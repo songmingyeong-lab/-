@@ -8,7 +8,7 @@ const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: proc
 
 const sources = [
   { code: "living-population", name: "행정동 단위 서울 생활인구(내국인)", serviceId: "OA-14991", serviceName: "SPOP_LOCAL_RESD_DONG", sourceUrl: "https://data.seoul.go.kr/dataList/OA-14991/S/1/datasetView.do", updateCycle: "daily", collectionCycle: "daily", geographicUnit: "administrative_dong", codeType: "administrative", filterField: "ADSTRD_CODE_SE" },
-  { code: "building-register", name: "서울시 건축물대장 총괄표제부", serviceId: "OA-22423", serviceName: null, sourceUrl: "https://data.seoul.go.kr/dataList/OA-22423/S/1/datasetView.do", updateCycle: "daily", collectionCycle: "monthly", geographicUnit: "legal_dong", codeType: "legal", filterField: null },
+  { code: "building-register", name: "서울시 건축물대장 총괄표제부", serviceId: "OA-22423", serviceName: "vBigDjrRecapTitle", sourceUrl: "https://data.seoul.go.kr/dataList/OA-22423/S/1/datasetView.do", updateCycle: "daily", collectionCycle: "monthly", geographicUnit: "legal_dong", codeType: "legal", filterField: "SGG_CD_NM,STDG_CD_NM" },
   { code: "commercial-store", name: "서울시 상권분석서비스(점포-행정동)", serviceId: "OA-22172", serviceName: "VwsmAdstrdStorW", sourceUrl: "https://data.seoul.go.kr/dataList/OA-22172/S/1/datasetView.do", updateCycle: "quarterly", collectionCycle: "quarterly", geographicUnit: "administrative_dong", codeType: "administrative", filterField: "ADSTRD_CD" },
   { code: "floating-population", name: "서울시 상권분석서비스(길단위인구-행정동)", serviceId: "OA-22178", serviceName: "VwsmAdstrdFlpopW", sourceUrl: "https://data.seoul.go.kr/dataList/OA-22178/S/1/datasetView.do", updateCycle: "quarterly", collectionCycle: "quarterly", geographicUnit: "administrative_dong", codeType: "administrative", filterField: "ADSTRD_CD" },
   { code: "vacant-house", name: "공공데이터포털 구로구 빈집현황 (명세 확인 필요)", serviceId: null, serviceName: null, sourceUrl: "https://www.data.go.kr/", updateCycle: "irregular", collectionCycle: "quarterly", geographicUnit: "published_unit_pending", codeType: "address_or_aggregate", filterField: null },
@@ -21,7 +21,7 @@ const sources = [
 ];
 
 const indicators = [
-  { code: "aged_building_ratio", sourceCode: "building-register", name: "30년 이상 노후건축물 비율", category: "주거환경", areaGroup: IndicatorArea.HOUSING_ENVIRONMENT, unit: "%", direction: FavorableDirection.LOWER_IS_BETTER, aggregation: "기준일과 사용승인일의 실제 차이로 계산", comparison: "previous_year", stale: 45, defaultStatus: ObservationStatus.UNVERIFIED, statusMessage: "건축물 자료원의 대표성과 법정동 조회 조건을 확인 중입니다.", proxy: "노후 주거환경의 구조적 상태를 보는 보조지표이며 위험건축물을 뜻하지 않습니다." },
+  { code: "aged_building_ratio", sourceCode: "building-register", name: "총괄표제부 기준 30년 이상 건축물 비율", category: "주거환경", areaGroup: IndicatorArea.HOUSING_ENVIRONMENT, unit: "%", direction: FavorableDirection.LOWER_IS_BETTER, aggregation: "가리봉동 총괄표제부 중 사용승인일 확인 건을 분모로 하여 수집 기준일 30년 이상 비율 계산", comparison: "previous_collection", stale: 45, defaultStatus: ObservationStatus.UNVERIFIED, statusMessage: "총괄표제부는 같은 부지에 표제부가 2개 이상인 경우 생성되므로 가리봉동 전체 건축물을 대표하지 않습니다.", proxy: "총괄표제부가 생성된 대지의 노후 정도를 보여주는 보조지표이며, 가리봉동의 모든 개별 건축물을 포함하는 비율은 아닙니다." },
   { code: "vacant_house_count", sourceCode: "vacant-house", name: "확인된 빈집 수", category: "주거환경", areaGroup: IndicatorArea.HOUSING_ENVIRONMENT, unit: "호", direction: FavorableDirection.LOWER_IS_BETTER, aggregation: "공식 빈집 조사자료의 가리봉동 집계", comparison: "previous_period", stale: 365, defaultStatus: ObservationStatus.MANUAL_VERIFICATION_REQUIRED, statusMessage: "공공데이터포털 구로구 빈집현황의 가리봉동 지원 여부와 공개 단위를 확인해야 합니다.", proxy: "건축물대장만으로 실제 빈집 여부를 판정하지 않습니다." },
   { code: "road_excavation_active_count", sourceCode: "road-construction", name: "진행 중 도로굴착 공사", category: "생활 불편", areaGroup: IndicatorArea.LIVING_INCONVENIENCE, unit: "건", direction: FavorableDirection.CONTEXT_DEPENDENT, aggregation: "주소 정규화 후 가리봉동 포함 진행 건 집계", comparison: "previous_month", stale: 2, defaultStatus: ObservationStatus.UNVERIFIED, statusMessage: "공식 API 서비스명과 주소·공사기간·상태 필드를 확인해야 합니다.", proxy: "이동 불편 가능성과 기반시설 개선 활동을 함께 살펴보는 보조지표입니다." },
   { code: "noise_vibration_complaint_count", sourceCode: "noise-complaint", name: "소음·진동 민원", category: "생활 불편", areaGroup: IndicatorArea.LIVING_INCONVENIENCE, unit: "건", direction: FavorableDirection.CONTEXT_DEPENDENT, aggregation: "민원 원문 없이 분류코드와 월별 집계값 사용", comparison: "previous_month", stale: 45, defaultStatus: ObservationStatus.UNVERIFIED, statusMessage: "가리봉동 공개 여부와 개인정보·민감정보 제한을 확인해야 합니다.", proxy: "신고 접근성·신고 성향·반복 신고의 영향을 받는 불편 가능성 지표입니다." },
@@ -58,9 +58,10 @@ async function main() {
     },
   });
   for (const source of sources) {
+    const enabled = ["living-population", "building-register", "commercial-store", "floating-population"].includes(source.code);
     await prisma.dataSource.upsert({
-      where: { code: source.code }, update: source,
-      create: { ...source, provider: "공공기관", responseFormat: "json", enabled: ["living-population", "commercial-store", "floating-population"].includes(source.code), config: { verificationRequired: !["living-population", "commercial-store", "floating-population"].includes(source.code) } },
+      where: { code: source.code }, update: { ...source, enabled, config: { verificationRequired: !enabled } },
+      create: { ...source, provider: "공공기관", responseFormat: "json", enabled, config: { verificationRequired: !enabled } },
     });
   }
   for (const item of indicators) {

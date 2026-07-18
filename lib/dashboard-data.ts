@@ -32,7 +32,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     const definitions = await prisma.indicatorDefinition.findMany({ where: { active: true }, include: { source: true, observations: { where: { areaId: area.id }, orderBy: { baseDate: "desc" }, take: 12 } } });
     const indicators: DashboardIndicator[] = definitions.map((definition) => {
       const [latest, previous] = definition.observations;
-      const metadata = latest?.metadata as { series?: DashboardIndicator["series"] } | null;
+      const metadata = latest?.metadata as { series?: DashboardIndicator["series"]; statusMessage?: string | null } | null;
       const storedStatus = latest ? latest.status.toLowerCase() as DataStatus : definition.defaultStatus.toLowerCase() as DataStatus;
       const staleAt = latest ? new Date(latest.baseDate.getTime() + definition.staleAfterDays * 86_400_000) : null;
       const status = storedStatus === "success" && staleAt && staleAt < new Date() ? "stale" : storedStatus;
@@ -42,7 +42,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         baseDate: latest?.baseDate.toISOString().slice(0, 10) ?? null, comparisonLabel: definition.comparisonPeriod,
         favorableDirection: definition.favorableDirection, status,
         source: definition.source.name, sourceUrl: definition.source.sourceUrl, geographicUnit: definition.geographicUnit,
-        collectedAt: latest?.collectedAt.toISOString() ?? null, updateCycle: definition.source.updateCycle, statusMessage: latest?.errorMessage ?? definition.statusMessage,
+        collectedAt: latest?.collectedAt.toISOString() ?? null, updateCycle: definition.source.updateCycle, statusMessage: metadata?.statusMessage ?? latest?.errorMessage ?? definition.statusMessage,
         proxyDescription: definition.proxyDescription,
         series: metadata?.series ?? [...definition.observations].reverse().map((observation) => ({ date: observation.baseDate.toISOString().slice(0, 10), value: observation.value === null ? null : Number(observation.value) })),
       };
