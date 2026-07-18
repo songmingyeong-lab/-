@@ -20,9 +20,13 @@ export const livingPopulationAdapter: SourceAdapter = {
   async collect(context) {
     let page: Awaited<ReturnType<typeof fetchSeoulPage<z.infer<typeof rowSchema>>>> | null = null;
     let baseDate = "";
-    for (let daysAgo = 1; daysAgo <= 35; daysAgo += 1) {
-      const target = new Date(context.now);
-      target.setUTCDate(target.getUTCDate() - daysAgo);
+    const expectedLatest = new Date(context.now);
+    expectedLatest.setUTCDate(expectedLatest.getUTCDate() - 5);
+    const previousMonthEnd = new Date(Date.UTC(context.now.getUTCFullYear(), context.now.getUTCMonth(), 0));
+    const twoMonthsAgoEnd = new Date(Date.UTC(context.now.getUTCFullYear(), context.now.getUTCMonth() - 1, 0));
+    const candidates = [...new Map([expectedLatest, previousMonthEnd, twoMonthsAgoEnd].map((date) => [compactDate(date), date])).values()];
+
+    for (const target of candidates) {
       baseDate = compactDate(target);
       const url = buildSeoulUrl(context.apiKey, service, 1, 1000, [baseDate, " ", context.administrativeDongCode]);
       const candidate = await fetchSeoulPage(url, service, rowSchema);

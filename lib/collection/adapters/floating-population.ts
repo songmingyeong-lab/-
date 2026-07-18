@@ -13,7 +13,9 @@ export const floatingPopulationAdapter: SourceAdapter = {
   code: "floating-population", cycle: "quarterly",
   async collect(context) {
     const data = await fetchAllSeoulRows(context.apiKey, service, rowSchema);
-    const row = data.rows.find((item) => item.ADSTRD_CD === context.administrativeDongCode && item.ADSTRD_CD_NM === context.dongName);
+    const row = data.rows
+      .filter((item) => item.ADSTRD_CD === context.administrativeDongCode && item.ADSTRD_CD_NM === context.dongName)
+      .sort((a, b) => b.STDR_YYQU_CD.localeCompare(a.STDR_YYQU_CD))[0];
     if (!row) return { sourceCode: this.code, status: "empty", recordsRead: data.rows.length, recordsSaved: 0, recordsSkipped: data.rows.length, indicators: [] };
     const labels = ["00~06", "06~11", "11~14", "14~17", "17~21", "21~24"];
     const values = [row.TMZON_00_06_FLPOP_CO, row.TMZON_06_11_FLPOP_CO, row.TMZON_11_14_FLPOP_CO, row.TMZON_14_17_FLPOP_CO, row.TMZON_17_21_FLPOP_CO, row.TMZON_21_24_FLPOP_CO];

@@ -14,6 +14,10 @@ describe("Seoul API client", () => {
     const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({ TestService: { RESULT: { CODE: "INFO-200", MESSAGE: "자료 없음" } } }), { status: 200 }));
     expect((await fetchSeoulPage("https://example.test", "TestService", rowSchema, { fetchImpl, retries: 1 })).rows).toEqual([]);
   });
+  it("returns empty when INFO-200 is provided at the top level", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({ RESULT: { CODE: "INFO-200", MESSAGE: "해당하는 데이터가 없습니다." } }), { status: 200 }));
+    expect((await fetchSeoulPage("https://example.test", "TestService", rowSchema, { fetchImpl, retries: 1 })).rows).toEqual([]);
+  });
   it("retries HTTP failures and eventually throws", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(new Response("fail", { status: 503 }));
     await expect(fetchSeoulPage("https://example.test", "TestService", rowSchema, { fetchImpl, retries: 2 })).rejects.toBeInstanceOf(SeoulApiError);

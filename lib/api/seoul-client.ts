@@ -50,6 +50,9 @@ export async function fetchSeoulPage<T>(
       const envelope = payload[service];
       if (!envelope || typeof envelope !== "object") {
         const error = resultSchema.safeParse(payload.RESULT);
+        if (error.success && error.data.CODE === "INFO-200") {
+          return { totalCount: 0, rows: [] as T[], payload };
+        }
         throw new SeoulApiError(error.success ? error.data.MESSAGE ?? error.data.CODE : "응답 서비스 키가 없습니다.", error.success ? error.data.CODE : undefined);
       }
       const data = envelope as Record<string, unknown>;

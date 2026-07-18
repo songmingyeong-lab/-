@@ -14,20 +14,29 @@ const rowSchema = z.object({
   CLSBIZ_RT: z.coerce.number().nullable(),
 });
 
-function previousQuarter(date: Date) {
-  const month = date.getUTCMonth();
-  const currentQuarter = Math.floor(month / 3) + 1;
-  const year = currentQuarter === 1 ? date.getUTCFullYear() - 1 : date.getUTCFullYear();
-  const quarter = currentQuarter === 1 ? 4 : currentQuarter - 1;
-  return `${year}${quarter}`;
+function recentQuarterCodes(date: Date, count = 8) {
+  const currentQuarterIndex = date.getUTCFullYear() * 4 + Math.floor(date.getUTCMonth() / 3);
+  return Array.from({ length: count }, (_, offset) => {
+    const quarterIndex = currentQuarterIndex - offset - 1;
+    return `${Math.floor(quarterIndex / 4)}${(quarterIndex % 4) + 1}`;
+  });
 }
 
 export const commercialStoreAdapter: SourceAdapter = {
   code: "commercial-store",
   cycle: "quarterly",
   async collect(context) {
-    const quarter = previousQuarter(context.now);
-    const data = await fetchAllSeoulRows(context.apiKey, service, rowSchema, [quarter]);
+    let data: Awaited<ReturnType<typeof fetchAllSeoulRows<z.infer<typeof rowSchema>>>> | null = null;
+    let quarter = "";
+    for (const candidateQuarter of recentQuarterCodes(context.now)) {
+      const candidate = await fetchAllSeoulRows(context.apiKey, service, rowSchema, [candidateQuarter]);
+      if (candidate.rows.length > 0) {
+        data = candidate;
+        quarter = candidateQuarter;
+        break;
+      }
+    }
+    if (!data) return { sourceCode: this.code, status: "empty", recordsRead: 0, recordsSaved: 0, recordsSkipped: 0, indicators: [] };
     const rows = data.rows.filter((row) => row.ADSTRD_CD === context.administrativeDongCode && row.ADSTRD_CD_NM === context.dongName);
     if (rows.length === 0) return { sourceCode: this.code, status: "empty", recordsRead: data.rows.length, recordsSaved: 0, recordsSkipped: data.rows.length, indicators: [] };
     const count = rows.reduce((sum, row) => sum + (row.SIMILR_INDUTY_STOR_CO ?? 0), 0);
