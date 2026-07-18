@@ -17,6 +17,10 @@ const indicatorSources: Record<string, string> = {
   living_population: "living-population",
   aged_building_ratio: "building-register",
   store_count: "commercial-store",
+  opening_rate: "commercial-store",
+  closing_rate: "commercial-store",
+  median_monthly_rent: "rental-transaction",
+  estimated_sales: "estimated-sales",
   floating_population: "floating-population",
 };
 
