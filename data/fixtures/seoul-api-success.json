@@ -1,0 +1,1 @@
+{ "ExampleService": { "list_total_count": 1, "RESULT": { "CODE": "INFO-000", "MESSAGE": "정상 처리되었습니다." }, "row": [{ "BASE_DATE": "20260630", "AREA_NAME": "가리봉동", "VALUE": 1 }] } }

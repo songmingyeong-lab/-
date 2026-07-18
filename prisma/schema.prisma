@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum FavorableDirection {
+  HIGHER_IS_BETTER
+  LOWER_IS_BETTER
+  NEUTRAL
+  CONTEXT_DEPENDENT
+}
+
+enum ObservationStatus {
+  SUCCESS
+  EMPTY
+  STALE
+  ERROR
+  MOCK
+}
+
+enum CollectionStatus {
+  RUNNING
+  SUCCESS
+  PARTIAL_SUCCESS
+  ERROR
+}
+
+model Area {
+  id                     String   @id @default(cuid())
+  slug                   String   @unique
+  cityName               String
+  districtName           String
+  dongName               String
+  administrativeDongCode String?
+  legalDongCode          String?
+  projectName            String?
+  projectType            String?
+  projectStartDate       DateTime?
+  projectEndDate         DateTime?
+  boundaryType           String
+  codeVerifiedAt         DateTime?
+  codeSourceUrl          String?
+  active                 Boolean  @default(true)
+  metadata               Json?
+  observations           IndicatorObservation[]
+  rawData                RawPublicData[]
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model DataSource {
+  id               String   @id @default(cuid())
+  code             String   @unique
+  name             String
+  provider         String
+  serviceId        String?
+  serviceName      String?
+  sourceUrl        String
+  termsUrl         String?
+  responseFormat   String
+  updateCycle      String
+  collectionCycle String
+  geographicUnit   String
+  codeType         String
+  filterField      String?
+  enabled          Boolean  @default(true)
+  verifiedAt       DateTime?
+  config           Json?
+  indicators       IndicatorDefinition[]
+  collectionRuns   CollectionRun[]
+  rawData          RawPublicData[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model IndicatorDefinition {
+  id                 String             @id @default(cuid())
+  code               String             @unique
+  name               String
+  category           String
+  unit               String
+  description        String
+  favorableDirection FavorableDirection
+  proxyDescription   String
+  aggregationMethod  String
+  comparisonPeriod   String
+  geographicUnit     String
+  missingValuePolicy String             @default("PRESERVE_NULL")
+  staleAfterDays     Int
+  methodologyVersion String             @default("1.0")
+  active             Boolean            @default(true)
+  sourceId           String
+  source             DataSource         @relation(fields: [sourceId], references: [id])
+  observations       IndicatorObservation[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+model IndicatorObservation {
+  id              String              @id @default(cuid())
+  areaId          String
+  indicatorId     String
+  value           Decimal?            @db.Decimal(20, 4)
+  baseDate        DateTime
+  periodStart     DateTime?
+  periodEnd       DateTime?
+  aggregationKey  String              @default("total")
+  geographicUnit  String
+  collectedAt     DateTime            @default(now())
+  status          ObservationStatus
+  sourceReference String?
+  rawRecordHash   String?
+  errorMessage    String?
+  metadata        Json?
+  area            Area                @relation(fields: [areaId], references: [id])
+  indicator       IndicatorDefinition @relation(fields: [indicatorId], references: [id])
+
+  @@unique([areaId, indicatorId, baseDate, aggregationKey])
+  @@index([areaId, indicatorId, baseDate])
+}
+
+model CollectionRun {
+  id            String              @id @default(cuid())
+  sourceId      String
+  startedAt     DateTime            @default(now())
+  finishedAt    DateTime?
+  status        CollectionStatus    @default(RUNNING)
+  requestedArea String
+  successCount  Int                 @default(0)
+  failureCount  Int                 @default(0)
+  skippedCount  Int                 @default(0)
+  errorSummary  String?
+  source        DataSource          @relation(fields: [sourceId], references: [id])
+  items         CollectionRunItem[]
+}
+
+model CollectionRunItem {
+  id           String           @id @default(cuid())
+  runId        String
+  sourceCode   String
+  status       CollectionStatus
+  savedCount   Int              @default(0)
+  skippedCount Int              @default(0)
+  errorMessage String?
+  run          CollectionRun    @relation(fields: [runId], references: [id], onDelete: Cascade)
+}
+
+model RawPublicData {
+  id          String     @id @default(cuid())
+  sourceId    String
+  areaId      String?
+  baseDate    DateTime?
+  collectedAt DateTime   @default(now())
+  payload     Json
+  payloadHash String
+  source      DataSource @relation(fields: [sourceId], references: [id])
+  area        Area?      @relation(fields: [areaId], references: [id])
+
+  @@unique([sourceId, payloadHash])
+}

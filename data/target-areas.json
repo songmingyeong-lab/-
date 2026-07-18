@@ -1,0 +1,22 @@
+[
+  {
+    "slug": "garibong",
+    "cityName": "서울특별시",
+    "districtName": "구로구",
+    "dongName": "가리봉동",
+    "administrativeDongCode": "11530595",
+    "legalDongCode": "1153010300",
+    "codeStatus": "ADMINISTRATIVE_CODE_VERIFIED_BY_SEOUL_API",
+    "codeVerifiedAt": "2026-07-18",
+    "codeVerificationEvidence": "SPOP_LOCAL_RESD_DONG sample 응답에서 2026-06-30 가리봉동 코드·명칭 체계 확인",
+    "boundaryType": "ADMINISTRATIVE_DONG",
+    "projectName": "가리봉 도시재생활성화사업",
+    "projectType": "도시재생활성화사업",
+    "projectStartDate": "2015-01-01",
+    "projectEndDate": "2020-12-31",
+    "projectDatePrecision": "YEAR_ONLY_CONFIRMATION_REQUIRED",
+    "scopeDescription": "지표 값은 도시재생활성화구역 경계가 아니라 가리봉동 행정동 전체를 나타냅니다.",
+    "officialProjectSource": "https://www.guro.go.kr/ceo/downloadContentsFile.do?fileNm=cts1269_file5.pdf",
+    "officialCodeSource": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052"
+  }
+]
