@@ -38,9 +38,10 @@ export const commercialStoreAdapter: SourceAdapter = {
     return {
       sourceCode: this.code, status: "success", recordsRead: data.rows.length, recordsSaved: 1, recordsSkipped: data.rows.length - rows.length,
       indicators: [{
-        code: "store_count", name: "전체 점포 수", category: "상권 변화", value: count, previousValue: null, unit: "개", baseDate: `${year}-${endMonth}-${endDay}`,
+        code: "store_count", name: "전체 점포 수", area: "상권 변화", value: count, previousValue: null, unit: "개", baseDate: `${year}-${endMonth}-${endDay}`,
         comparisonLabel: "전분기 대비", favorableDirection: "CONTEXT_DEPENDENT", status: "success", source: "서울시 상권분석서비스(점포-행정동)",
         sourceUrl: "https://data.seoul.go.kr/dataList/OA-22172/S/1/datasetView.do", geographicUnit: "가리봉동 행정동 전체",
+        collectedAt: context.now.toISOString(), updateCycle: "분기", statusMessage: null,
         proxyDescription: "업종별 전체 점포 수 합계이며 상권의 질이나 주민 만족도를 직접 뜻하지 않습니다.", series: [],
       }], rawPayloads: data.payloads,
     };

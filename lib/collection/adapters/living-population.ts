@@ -36,9 +36,10 @@ export const livingPopulationAdapter: SourceAdapter = {
     return {
       sourceCode: this.code, status: "success", recordsRead: page.rows.length, recordsSaved: 1, recordsSkipped: page.rows.length - rows.length,
       indicators: [{
-        code: "living_population", name: "일평균 생활인구", category: "활력·혼잡", value: average, previousValue: null, unit: "명",
+        code: "living_population", name: "일평균 생활인구", area: "활력·혼잡", value: average, previousValue: null, unit: "명",
         baseDate: `${baseDate.slice(0, 4)}-${baseDate.slice(4, 6)}-${baseDate.slice(6)}`, comparisonLabel: "직전 수집 대비", favorableDirection: "CONTEXT_DEPENDENT", status: "success",
         source: "행정동 단위 서울 생활인구(내국인)", sourceUrl: "https://data.seoul.go.kr/dataList/OA-14991/S/1/datasetView.do", geographicUnit: "가리봉동 행정동 전체",
+        collectedAt: context.now.toISOString(), updateCycle: "매일", statusMessage: null,
         proxyDescription: "지역에 머문 인구 규모의 변화를 보여주며 주민 만족도를 직접 의미하지 않습니다.", series: [],
       }],
       rawPayloads: [page.payload],

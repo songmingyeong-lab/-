@@ -23,9 +23,10 @@ export const floatingPopulationAdapter: SourceAdapter = {
     return {
       sourceCode: this.code, status: "success", recordsRead: data.rows.length, recordsSaved: 1, recordsSkipped: data.rows.length - 1,
       indicators: [{
-        code: "floating_population", name: "총 유동인구", category: "활력·혼잡", value: row.TOT_FLPOP_CO, previousValue: null, unit: "명",
+        code: "floating_population", name: "총 유동인구", area: "활력·혼잡", value: row.TOT_FLPOP_CO, previousValue: null, unit: "명",
         baseDate: `${year}-${endMonth}-${["03", "12"].includes(endMonth) ? "31" : "30"}`, comparisonLabel: "전분기 대비", favorableDirection: "CONTEXT_DEPENDENT", status: "success",
         source: "서울시 상권분석서비스(길단위인구-행정동)", sourceUrl: "https://data.seoul.go.kr/dataList/OA-22178/S/1/datasetView.do", geographicUnit: "가리봉동 행정동 전체",
+        collectedAt: context.now.toISOString(), updateCycle: "분기", statusMessage: null,
         proxyDescription: "시간대별 지역 활동량의 대리 지표이며 실제 보행자 수와 동일하지 않습니다.", series: labels.map((date, index) => ({ date, value: values[index] })),
       }], rawPayloads: data.payloads,
     };

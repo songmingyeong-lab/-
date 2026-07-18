@@ -13,7 +13,12 @@ describe("IndicatorCard", () => {
   });
   it("shows insufficient source instead of zero", () => {
     render(<IndicatorCard indicator={getMockDashboardData().indicators[1]} />);
-    expect(screen.getByText("자료 없음")).toBeInTheDocument();
+    expect(screen.getAllByText("자료 없음").length).toBeGreaterThan(0);
     expect(screen.queryByText("0")).not.toBeInTheDocument();
+  });
+  it("shows collection date and update cycle separately from the base date", () => {
+    render(<IndicatorCard indicator={getMockDashboardData().indicators[0]} />);
+    expect(screen.getByText(/수집 2026\. 6\. 30\./)).toBeInTheDocument();
+    expect(screen.getByText(/매일/)).toBeInTheDocument();
   });
 });

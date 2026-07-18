@@ -4,8 +4,11 @@
     "slug": "garibong",
     "name": "서울특별시 구로구 가리봉동",
     "districtName": "구로구",
+    "administrativeDongName": "가리봉동",
+    "administrativeDongCode": "11530595",
+    "legalDongName": "가리봉동",
+    "legalDongCode": "1153010300",
     "projectName": "가리봉 도시재생활성화사업",
-    "projectPeriod": "2015~2020 (연도 단위, 세부일자 확인 필요)",
     "projectType": "도시재생활성화사업",
     "scope": "가리봉동 행정동 전체"
   },
@@ -15,7 +18,7 @@
     {
       "code": "living_population",
       "name": "일평균 생활인구",
-      "category": "활력·혼잡",
+      "area": "활력·혼잡",
       "value": 15182.4,
       "previousValue": 15698.1,
       "unit": "명",
@@ -26,6 +29,9 @@
       "source": "행정동 단위 서울 생활인구(내국인)",
       "sourceUrl": "https://data.seoul.go.kr/dataList/OA-14991/S/1/datasetView.do",
       "geographicUnit": "가리봉동 행정동 전체",
+      "collectedAt": "2026-06-30T23:00:00+09:00",
+      "updateCycle": "매일",
+      "statusMessage": null,
       "proxyDescription": "지역에 머문 인구 규모의 변화를 보여주며 주민 만족도를 직접 의미하지 않습니다.",
       "series": [
         { "date": "2026-01", "value": 14810.2 },
@@ -39,7 +45,7 @@
     {
       "code": "aged_building_ratio",
       "name": "30년 이상 노후건축물 비율",
-      "category": "생활 불편·주거환경",
+      "area": "주거환경",
       "value": null,
       "previousValue": null,
       "unit": "%",
@@ -50,13 +56,16 @@
       "source": "서울시 건축물대장 총괄표제부",
       "sourceUrl": "https://data.seoul.go.kr/dataList/OA-22423/S/1/datasetView.do",
       "geographicUnit": "가리봉동 법정동 (자료원 검증 전)",
+      "collectedAt": null,
+      "updateCycle": "월별 확인",
+      "statusMessage": "건축물 자료원의 대표성과 법정동 조회 조건을 확인 중입니다.",
       "proxyDescription": "총괄표제부만으로 전체 건축물을 대표할 수 있는지 검증이 불충분하여 값을 표시하지 않습니다.",
       "series": []
     },
     {
       "code": "store_count",
       "name": "전체 점포 수",
-      "category": "상권 변화",
+      "area": "상권 변화",
       "value": 682,
       "previousValue": 671,
       "unit": "개",
@@ -67,6 +76,9 @@
       "source": "서울시 상권분석서비스(점포-행정동)",
       "sourceUrl": "https://data.seoul.go.kr/dataList/OA-22172/S/1/datasetView.do",
       "geographicUnit": "가리봉동 행정동 전체",
+      "collectedAt": "2026-06-30T23:00:00+09:00",
+      "updateCycle": "분기",
+      "statusMessage": null,
       "proxyDescription": "점포 수 변화만으로 상권의 질이나 주민 만족도를 판단할 수 없습니다.",
       "series": [
         { "date": "2025 Q2", "value": 654 },
@@ -78,7 +90,7 @@
     {
       "code": "floating_population",
       "name": "총 유동인구",
-      "category": "활력·혼잡",
+      "area": "활력·혼잡",
       "value": 312480,
       "previousValue": 304920,
       "unit": "명",
@@ -89,6 +101,9 @@
       "source": "서울시 상권분석서비스(길단위인구-행정동)",
       "sourceUrl": "https://data.seoul.go.kr/dataList/OA-22178/S/1/datasetView.do",
       "geographicUnit": "가리봉동 행정동 전체",
+      "collectedAt": "2026-06-30T23:00:00+09:00",
+      "updateCycle": "분기",
+      "statusMessage": null,
       "proxyDescription": "시간대별 지역 활동량의 대리 지표이며 실제 보행자 수와 동일하지 않습니다.",
       "series": [
         { "date": "00~06", "value": 32140 },

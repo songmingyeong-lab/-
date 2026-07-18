@@ -15,11 +15,26 @@ enum FavorableDirection {
 }
 
 enum ObservationStatus {
+  LOADING
   SUCCESS
   EMPTY
   STALE
   ERROR
   MOCK
+  PARTIAL_SUCCESS
+  UNSUPPORTED_GEOGRAPHY
+  INSUFFICIENT_SAMPLE
+  UNVERIFIED
+  MANUAL_VERIFICATION_REQUIRED
+  RESTRICTED_DATA
+}
+
+enum IndicatorArea {
+  HOUSING_ENVIRONMENT
+  LIVING_INCONVENIENCE
+  COMMERCIAL_CHANGE
+  VITALITY_CONGESTION
+  COMMUNITY_HUB
 }
 
 enum CollectionStatus {
@@ -35,7 +50,9 @@ model Area {
   cityName               String
   districtName           String
   dongName               String
+  administrativeDongName String?
   administrativeDongCode String?
+  legalDongName          String?
   legalDongCode          String?
   projectName            String?
   projectType            String?
@@ -82,6 +99,7 @@ model IndicatorDefinition {
   code               String             @unique
   name               String
   category           String
+  areaGroup          IndicatorArea      @default(VITALITY_CONGESTION)
   unit               String
   description        String
   favorableDirection FavorableDirection
@@ -93,6 +111,8 @@ model IndicatorDefinition {
   staleAfterDays     Int
   methodologyVersion String             @default("1.0")
   active             Boolean            @default(true)
+  defaultStatus      ObservationStatus  @default(EMPTY)
+  statusMessage      String?
   sourceId           String
   source             DataSource         @relation(fields: [sourceId], references: [id])
   observations       IndicatorObservation[]
