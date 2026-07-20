@@ -9,26 +9,35 @@ function row(overrides: Partial<BuildingRegisterRow> = {}): BuildingRegisterRow 
     SGG_CD_NM: "서울특별시 구로구",
     STDG_CD_NM: "가리봉동",
     BDRG_SN: "1",
+    MN_USG_CD_NM: "교육연구및복지시설",
     USE_APRV_YMD: "1990-01-01",
     ...overrides,
   };
 }
 
 describe("building register summary", () => {
-  it("filters the exact district and legal dong and excludes missing approval dates", () => {
+  it("filters the exact legal dong and counts the two requested main-use categories", () => {
     const result = summarizeBuildingRegister([
       row(),
-      row({ BDRG_SN: "2", PLAT_PLC: "서울특별시 구로구 가리봉동 2-1", USE_APRV_YMD: "2010-01-01" }),
-      row({ BDRG_SN: "3", PLAT_PLC: "서울특별시 구로구 가리봉동 3-1", USE_APRV_YMD: "" }),
+      row({ BDRG_SN: "2", PLAT_PLC: "서울특별시 구로구 가리봉동 2-1", MN_USG_CD_NM: "문화및집회시설" }),
+      row({ BDRG_SN: "3", PLAT_PLC: "서울특별시 구로구 가리봉동 3-1", MN_USG_CD_NM: "단독주택" }),
       row({ BDRG_SN: "4", PLAT_PLC: "서울특별시 구로구 구로동 4-1", STDG_CD_NM: "구로동" }),
-    ], target, new Date("2026-07-18T00:00:00Z"));
+    ], target);
 
-    expect(result).toMatchObject({ totalCount: 3, knownCount: 2, missingCount: 1, agedCount: 1, ratio: 50 });
-    expect(result.coverageRate).toBeCloseTo(200 / 3);
+    expect(result).toMatchObject({
+      totalCount: 3,
+      educationWelfareCount: 1,
+      cultureAssemblyCount: 1,
+      targetFacilityCount: 2,
+      knownCount: 3,
+      agedCount: 3,
+      agedRatio: 100,
+    });
   });
 
   it("deduplicates the same ledger and address", () => {
-    const result = summarizeBuildingRegister([row(), row()], target, new Date("2026-07-18T00:00:00Z"));
+    const result = summarizeBuildingRegister([row(), row()], target);
     expect(result.totalCount).toBe(1);
+    expect(result.targetFacilityCount).toBe(1);
   });
 });

@@ -34,8 +34,8 @@ export async function persistAdapterResult(areaSlug: string, result: AdapterResu
       const observationStatus = observationStatuses[indicator.status];
       await prisma.indicatorObservation.upsert({
         where: { areaId_indicatorId_baseDate_aggregationKey: { areaId: area.id, indicatorId: definition.id, baseDate: new Date(`${indicator.baseDate}T00:00:00+09:00`), aggregationKey: "total" } },
-        update: { value: indicator.value, collectedAt: new Date(), status: observationStatus, sourceReference: indicator.sourceUrl, metadata: { series: indicator.series, statusMessage: indicator.statusMessage } as unknown as Prisma.InputJsonValue },
-        create: { areaId: area.id, indicatorId: definition.id, value: indicator.value, baseDate: new Date(`${indicator.baseDate}T00:00:00+09:00`), aggregationKey: "total", geographicUnit: indicator.geographicUnit, status: observationStatus, sourceReference: indicator.sourceUrl, metadata: { series: indicator.series, statusMessage: indicator.statusMessage } as unknown as Prisma.InputJsonValue },
+        update: { value: indicator.value, geographicUnit: indicator.geographicUnit, collectedAt: new Date(), status: observationStatus, sourceReference: indicator.sourceUrl, metadata: { series: indicator.series, statusMessage: indicator.statusMessage, spatialComparison: indicator.spatialComparison } as unknown as Prisma.InputJsonValue },
+        create: { areaId: area.id, indicatorId: definition.id, value: indicator.value, baseDate: new Date(`${indicator.baseDate}T00:00:00+09:00`), aggregationKey: "total", geographicUnit: indicator.geographicUnit, status: observationStatus, sourceReference: indicator.sourceUrl, metadata: { series: indicator.series, statusMessage: indicator.statusMessage, spatialComparison: indicator.spatialComparison } as unknown as Prisma.InputJsonValue },
       });
       saved += 1;
     }

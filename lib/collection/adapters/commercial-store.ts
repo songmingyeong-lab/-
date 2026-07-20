@@ -48,6 +48,16 @@ export const commercialStoreAdapter: SourceAdapter = {
     const rows = data.rows.filter((row) => row.ADSTRD_CD === context.administrativeDongCode && row.ADSTRD_CD_NM === context.dongName);
     if (rows.length === 0) return { sourceCode: this.code, status: "empty", recordsRead: data.rows.length, recordsSaved: 0, recordsSkipped: data.rows.length, indicators: [] };
     const summary = summarizeCommercialStoreRows(rows);
+    const districtCode = context.administrativeDongCode.slice(0, 5);
+    const grouped = new Map<string, typeof rows>();
+    for (const row of data.rows.filter((item) => item.ADSTRD_CD.startsWith(districtCode))) {
+      grouped.set(row.ADSTRD_CD, [...(grouped.get(row.ADSTRD_CD) ?? []), row]);
+    }
+    const summaries = [...grouped.entries()].map(([code, dongRows]) => ({ code, name: dongRows[0].ADSTRD_CD_NM, ...summarizeCommercialStoreRows(dongRows) }));
+    const comparisonData = (unit: string, select: (item: (typeof summaries)[number]) => number | null) => ({
+      target: { areaCode: context.administrativeDongCode, areaName: context.dongName, cityCode: context.administrativeDongCode.slice(0, 2), districtCode, geographicUnit: "ADMINISTRATIVE_DONG" as const, basePeriod: quarter, unit, value: select(summaries.find((item) => item.code === context.administrativeDongCode)!) },
+      candidates: summaries.filter((item) => item.code !== context.administrativeDongCode).map((item) => ({ areaCode: item.code, areaName: item.name, cityCode: item.code.slice(0, 2), districtCode: item.code.slice(0, 5), geographicUnit: "ADMINISTRATIVE_DONG" as const, basePeriod: quarter, unit, value: select(item) })),
+    });
     const baseDate = quarterEndDate(quarter);
     const common = {
       area: "상권 변화" as const,
@@ -66,9 +76,9 @@ export const commercialStoreAdapter: SourceAdapter = {
     return {
       sourceCode: this.code, status: "success", recordsRead: data.rows.length, recordsSaved: 3, recordsSkipped: data.rows.length - rows.length,
       indicators: [
-        { ...common, code: "store_count", name: "전체 점포 수", value: summary.storeCount, unit: "개", statusMessage: null, proxyDescription: "업종별 전체 점포 수 합계이며 상권의 질이나 주민 만족도를 직접 뜻하지 않습니다." },
-        { ...common, code: "opening_rate", name: "개업률", value: summary.openingRate, unit: "%", statusMessage: `공식 업종별 개업점포 수 ${summary.openedCount}개를 전체 점포 ${summary.storeCount}개로 나눈 가중 집계값입니다.`, proxyDescription: "업종별 공식 개업률을 단순평균하지 않고 개업점포 수와 전체 점포 수로 집계한 상권 진입 보조지표입니다." },
-        { ...common, code: "closing_rate", name: "폐업률", value: summary.closingRate, unit: "%", statusMessage: `공식 업종별 폐업점포 수 ${summary.closedCount}개를 전체 점포 ${summary.storeCount}개로 나눈 가중 집계값입니다.`, proxyDescription: "업종별 공식 폐업률을 단순평균하지 않고 폐업점포 수와 전체 점포 수로 집계한 상권 이탈 보조지표입니다." },
+        { ...common, code: "store_count", name: "전체 점포 수", value: summary.storeCount, unit: "개", statusMessage: null, proxyDescription: "업종별 전체 점포 수 합계이며 상권의 질이나 주민 만족도를 직접 뜻하지 않습니다.", spatialComparison: comparisonData("개", (item) => item.storeCount) },
+        { ...common, code: "opening_rate", name: "개업률", value: summary.openingRate, unit: "%", statusMessage: `공식 업종별 개업점포 수 ${summary.openedCount}개를 전체 점포 ${summary.storeCount}개로 나눈 가중 집계값입니다.`, proxyDescription: "업종별 공식 개업률을 단순평균하지 않고 개업점포 수와 전체 점포 수로 집계한 상권 진입 보조지표입니다.", spatialComparison: comparisonData("%", (item) => item.openingRate) },
+        { ...common, code: "closing_rate", name: "폐업률", value: summary.closingRate, unit: "%", statusMessage: `공식 업종별 폐업점포 수 ${summary.closedCount}개를 전체 점포 ${summary.storeCount}개로 나눈 가중 집계값입니다.`, proxyDescription: "업종별 공식 폐업률을 단순평균하지 않고 폐업점포 수와 전체 점포 수로 집계한 상권 이탈 보조지표입니다.", spatialComparison: comparisonData("%", (item) => item.closingRate) },
       ],
       rawPayloads: data.payloads,
     };

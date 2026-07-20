@@ -22,6 +22,12 @@ const indicatorSources: Record<string, string> = {
   median_monthly_rent: "rental-transaction",
   estimated_sales: "estimated-sales",
   floating_population: "floating-population",
+  peak_floating_time_band: "floating-population",
+  vacant_house_count: "vacant-house",
+  road_excavation_active_count: "road-construction",
+  noise_vibration_complaint_count: "noise-complaint",
+  resident_program_count: "public-program",
+  urban_regeneration_hub_count: "building-register",
 };
 
 export async function runCollection(options: RunOptions = {}) {
@@ -32,7 +38,7 @@ export async function runCollection(options: RunOptions = {}) {
   if (environment.DATA_MODE === "mock") {
     const dashboard = getMockDashboardData();
     const indicators = options.indicator ? dashboard.indicators.filter((item) => item.code === options.indicator) : dashboard.indicators;
-    const results: AdapterResult[] = indicators.map((item) => ({ sourceCode: indicatorSources[item.code], status: item.status === "empty" ? "empty" : "success", recordsRead: item.series.length, recordsSaved: item.value === null ? 0 : 1, recordsSkipped: 0, indicators: [item] }));
+    const results: AdapterResult[] = indicators.map((item) => ({ sourceCode: indicatorSources[item.code], status: item.value === null ? "empty" : "success", recordsRead: item.series.length, recordsSaved: item.value === null ? 0 : 1, recordsSkipped: 0, indicators: [item] }));
     if (environment.DATABASE_URL) {
       for (const result of results) await persistAdapterResult(area.slug, result, environment.SAVE_RAW_RESPONSES === "true");
     }

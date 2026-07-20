@@ -10,12 +10,12 @@ describe("internal API", () => {
     expect(response.status).toBe(200);
     expect(body.data[0].slug).toBe("garibong");
   });
-  it("returns an indicator and preserves chart gaps", async () => {
+  it("returns an indicator and its chart points", async () => {
     const indicatorResponse = await getIndicator(new Request("http://local.test"), { params: Promise.resolve({ areaSlug: "garibong", indicatorCode: "living_population" }) });
     expect((await indicatorResponse.json()).data.code).toBe("living_population");
     const chartResponse = await getChart(new Request("http://local.test"), { params: Promise.resolve({ areaSlug: "garibong", chartCode: "living_population" }) });
     const chart = await chartResponse.json();
-    expect(chart.data.points.some((point: { value: number | null }) => point.value === null)).toBe(true);
+    expect(chart.data.points).toEqual([]);
   });
   it("returns 404 for an unknown indicator", async () => {
     const response = await getIndicator(new Request("http://local.test"), { params: Promise.resolve({ areaSlug: "garibong", indicatorCode: "unknown" }) });

@@ -16,8 +16,8 @@ const rowSchema = z.object({
 
 export type RentalTransactionRow = z.infer<typeof rowSchema>;
 
-export function summarizeMonthlyRent(rows: RentalTransactionRow[]) {
-  const latestMonth = rows.reduce((latest, row) => {
+export function summarizeMonthlyRent(rows: RentalTransactionRow[], fixedMonth?: string) {
+  const latestMonth = fixedMonth ?? rows.reduce((latest, row) => {
     const month = row.CTRT_DAY.slice(0, 6);
     return row.RENT_SE === "월세" && (row.RTFE ?? 0) > 0 && month > latest ? month : latest;
   }, "");
@@ -55,6 +55,9 @@ export const rentalTransactionAdapter: SourceAdapter = {
     if (summary.median === null) return { sourceCode: this.code, status: "empty", recordsRead: data.rows.length, recordsSaved: 0, recordsSkipped: data.rows.length, indicators: [], rawPayloads: data.payloads };
 
     const insufficient = summary.sampleCount < 5;
+    const districtRows = data.rows.filter((row) => row.CGG_CD === districtCode);
+    const legalDongs = [...new Map(districtRows.map((row) => [row.STDG_CD, row.STDG_NM])).entries()];
+    const comparisonSummaries = legalDongs.map(([code, name]) => ({ code, name, summary: summarizeMonthlyRent(districtRows.filter((row) => row.STDG_CD === code), summary.latestMonth) }));
     return {
       sourceCode: this.code,
       status: "success",
@@ -80,6 +83,10 @@ export const rentalTransactionAdapter: SourceAdapter = {
         statusMessage: `${summary.latestMonth.slice(0, 4)}년 ${Number(summary.latestMonth.slice(4))}월 현재 공개된 월세 계약 ${summary.sampleCount}건의 임대료(RTFE) 중위값입니다.${insufficient ? " 표본이 5건 미만이므로 참고값입니다." : ""} 주거용 전월세 자료이며 상가 임대료가 아닙니다.`,
         proxyDescription: "가리봉동 주거용 월세 계약의 공개 표본을 나타내며 상가 임대료나 모든 임대주택의 시세를 뜻하지 않습니다.",
         series: [],
+        spatialComparison: {
+          target: { areaCode: context.administrativeDongCode, areaName: context.dongName, cityCode: "11", districtCode, geographicUnit: "LEGAL_DONG", basePeriod: summary.latestMonth, unit: "만원", value: summary.median },
+          candidates: comparisonSummaries.filter((item) => item.code !== legalDongCode).map((item) => ({ areaCode: `LEGAL:${item.code}`, areaName: item.name, cityCode: "11", districtCode, geographicUnit: "LEGAL_DONG", basePeriod: summary.latestMonth, unit: "만원", value: item.summary.median })),
+        },
       }],
       rawPayloads: data.payloads,
     };

@@ -17,4 +17,11 @@ describe("Dashboard areas", () => {
     render(<Dashboard data={getMockDashboardData()} />);
     expect(screen.queryByText(/2015~2020/)).not.toBeInTheDocument();
   });
+
+  it("renders category score summaries without creating an overall score", () => {
+    render(<Dashboard data={getMockDashboardData()} />);
+    expect(screen.getAllByText("영역 진단점수")).toHaveLength(5);
+    expect(screen.getAllByText("산출 보류").length).toBeGreaterThanOrEqual(5);
+    expect(screen.queryByText("전체 종합점수")).not.toBeInTheDocument();
+  });
 });
