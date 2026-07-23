@@ -2,9 +2,12 @@ import "../envConfig";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, FavorableDirection, IndicatorArea, ObservationStatus } from "../generated/prisma/client";
 import areas from "../data/target-areas.json";
+import { getDatabaseUrl } from "../lib/validation/env";
 
-if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL이 필요합니다.");
-const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
+// Prefer the direct/session connection for Supabase maintenance work. Local
+// PostgreSQL remains compatible by providing only DATABASE_URL.
+const connectionString = getDatabaseUrl("maintenance");
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 const sources = [
   { code: "living-population", name: "행정동 단위 서울 생활인구(내국인)", serviceId: "OA-14991", serviceName: "SPOP_LOCAL_RESD_DONG", sourceUrl: "https://data.seoul.go.kr/dataList/OA-14991/S/1/datasetView.do", updateCycle: "daily", collectionCycle: "daily", geographicUnit: "administrative_dong", codeType: "administrative", filterField: "ADSTRD_CODE_SE" },
@@ -74,4 +77,9 @@ async function main() {
   }
 }
 
-main().finally(() => prisma.$disconnect());
+main()
+  .catch((error) => {
+    console.error("Seed failed:", error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  })
+  .finally(() => prisma.$disconnect());

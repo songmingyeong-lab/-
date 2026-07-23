@@ -1,7 +1,14 @@
 import { z } from "zod";
 import { runCollection } from "@/lib/collection/runner/run-collection";
+import { sanitizeCollectionSummary } from "@/lib/collection/sanitize-summary";
 
-const bodySchema = z.object({ mode: z.enum(["mock", "live"]).optional(), source: z.string().optional(), area: z.literal("garibong").default("garibong") });
+const bodySchema = z.object({
+  mode: z.enum(["mock", "live"]).optional(),
+  source: z.string().optional(),
+  indicator: z.string().optional(),
+  cycle: z.enum(["daily", "monthly", "quarterly"]).optional(),
+  area: z.literal("garibong").default("garibong"),
+});
 
 export async function POST(request: Request) {
   const configuredToken = process.env.COLLECTION_ADMIN_TOKEN;
@@ -10,5 +17,5 @@ export async function POST(request: Request) {
   const parsed = bodySchema.safeParse(await request.json().catch(() => ({})));
   if (!parsed.success) return Response.json({ status: "error", error: parsed.error.flatten() }, { status: 400 });
   const summary = await runCollection(parsed.data);
-  return Response.json(summary, { status: summary.status === "error" ? 502 : 200 });
+  return Response.json(sanitizeCollectionSummary(summary), { status: summary.status === "error" ? 502 : 200 });
 }
