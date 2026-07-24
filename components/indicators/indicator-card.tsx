@@ -10,7 +10,7 @@ const labels: Record<DataStatus, string> = {
 const missingReasonFallback: Partial<Record<DataStatus, string>> = {
   empty: "자료원이 정상 응답했지만 해당 조건에 맞는 공개 자료가 없습니다.",
   error: "자료 수집 또는 저장 과정에서 오류가 발생했습니다.",
-  unsupported_geography: "공식 자료가 가리봉동 단위로 제공되지 않습니다.",
+  unsupported_geography: "공식 자료가 선택한 행정동 단위로 제공되지 않습니다.",
   unverified: "공식 API의 조회 조건이나 자료의 지역 관련성을 아직 검증하지 못했습니다.",
   manual_verification_required: "공개 데이터만으로 판정할 수 없어 공식 목록 또는 담당자 확인이 필요합니다.",
   restricted_data: "개인정보 또는 공개 범위 제한으로 원자료를 사용할 수 없습니다.",
@@ -59,7 +59,7 @@ export function IndicatorCard({ indicator, score }: { indicator: DashboardIndica
           <div><dt>기준기간</dt><dd>{score.basePeriod ?? "없음"}</dd></div>
         </dl>
         <p className="score-direction">산정 방향: {directionLabels[score.direction]}</p>
-        {score.direction === "BALANCED" && <p className="context-score-notice">이 지표는 높고 낮음 자체를 긍정·부정으로 단정하지 않고 구로구 다른 행정동의 일반적 수준에서 벗어난 정도를 평가했습니다.</p>}
+        {score.direction === "BALANCED" && <p className="context-score-notice">이 지표는 높고 낮음 자체를 긍정·부정으로 단정하지 않고 같은 자치구 다른 행정동의 일반적 수준에서 벗어난 정도를 평가했습니다.</p>}
       </section>}
       <IndicatorChart data={indicator.series} unit={indicator.unit} name={indicator.name} />
       {missingReason

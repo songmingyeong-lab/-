@@ -45,7 +45,7 @@ export const commercialStoreAdapter: SourceAdapter = {
       }
     }
     if (!data) return { sourceCode: this.code, status: "empty", recordsRead: 0, recordsSaved: 0, recordsSkipped: 0, indicators: [] };
-    const rows = data.rows.filter((row) => row.ADSTRD_CD === context.administrativeDongCode && row.ADSTRD_CD_NM === context.dongName);
+    const rows = data.rows.filter((row) => row.ADSTRD_CD === context.administrativeDongCode && row.ADSTRD_CD_NM === context.administrativeDongName);
     if (rows.length === 0) return { sourceCode: this.code, status: "empty", recordsRead: data.rows.length, recordsSaved: 0, recordsSkipped: data.rows.length, indicators: [] };
     const summary = summarizeCommercialStoreRows(rows);
     const districtCode = context.administrativeDongCode.slice(0, 5);
@@ -55,7 +55,7 @@ export const commercialStoreAdapter: SourceAdapter = {
     }
     const summaries = [...grouped.entries()].map(([code, dongRows]) => ({ code, name: dongRows[0].ADSTRD_CD_NM, ...summarizeCommercialStoreRows(dongRows) }));
     const comparisonData = (unit: string, select: (item: (typeof summaries)[number]) => number | null) => ({
-      target: { areaCode: context.administrativeDongCode, areaName: context.dongName, cityCode: context.administrativeDongCode.slice(0, 2), districtCode, geographicUnit: "ADMINISTRATIVE_DONG" as const, basePeriod: quarter, unit, value: select(summaries.find((item) => item.code === context.administrativeDongCode)!) },
+      target: { areaCode: context.administrativeDongCode, areaName: context.administrativeDongName, cityCode: context.administrativeDongCode.slice(0, 2), districtCode, geographicUnit: "ADMINISTRATIVE_DONG" as const, basePeriod: quarter, unit, value: select(summaries.find((item) => item.code === context.administrativeDongCode)!) },
       candidates: summaries.filter((item) => item.code !== context.administrativeDongCode).map((item) => ({ areaCode: item.code, areaName: item.name, cityCode: item.code.slice(0, 2), districtCode: item.code.slice(0, 5), geographicUnit: "ADMINISTRATIVE_DONG" as const, basePeriod: quarter, unit, value: select(item) })),
     });
     const baseDate = quarterEndDate(quarter);
@@ -68,7 +68,7 @@ export const commercialStoreAdapter: SourceAdapter = {
       status: "success" as const,
       source: "서울시 상권분석서비스(점포-행정동)",
       sourceUrl: "https://data.seoul.go.kr/dataList/OA-22172/S/1/datasetView.do",
-      geographicUnit: "가리봉동 행정동 전체",
+      geographicUnit: `${context.administrativeDongName} 행정동 전체`,
       collectedAt: context.now.toISOString(),
       updateCycle: "분기",
       series: [],

@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { runCollection } from "@/lib/collection/runner/run-collection";
 import { sanitizeCollectionSummary } from "@/lib/collection/sanitize-summary";
+import { DEFAULT_AREA_SLUG, isTargetAreaSlug } from "@/lib/areas";
 
 const bodySchema = z.object({
   mode: z.enum(["mock", "live"]).optional(),
   source: z.string().optional(),
   indicator: z.string().optional(),
   cycle: z.enum(["daily", "monthly", "quarterly"]).optional(),
-  area: z.literal("garibong").default("garibong"),
+  area: z.string().refine(isTargetAreaSlug, "지원하지 않는 지역입니다.").default(DEFAULT_AREA_SLUG),
 });
 
 export async function POST(request: Request) {

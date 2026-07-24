@@ -34,6 +34,7 @@ export interface DashboardData {
   area: {
     slug: string;
     name: string;
+    cityName: string;
     districtName: string;
     administrativeDongName: string;
     administrativeDongCode: string | null;

@@ -44,17 +44,17 @@ export const livingPopulationAdapter: SourceAdapter = {
     if (!target) return { sourceCode: this.code, status: "empty", recordsRead: data.rows.length, recordsSaved: 0, recordsSkipped: data.rows.length, indicators: [], rawPayloads: data.payloads };
     const displayDate = `${baseDate.slice(0, 4)}-${baseDate.slice(4, 6)}-${baseDate.slice(6)}`;
     const spatialComparison = {
-      target: { areaCode: target.code, areaName: context.dongName, cityCode: target.code.slice(0, 2), districtCode, geographicUnit: "ADMINISTRATIVE_DONG" as const, basePeriod: baseDate, unit: "명", value: target.value },
+      target: { areaCode: target.code, areaName: context.administrativeDongName, cityCode: target.code.slice(0, 2), districtCode, geographicUnit: "ADMINISTRATIVE_DONG" as const, basePeriod: baseDate, unit: "명", value: target.value },
       candidates: values.filter((item) => item.code !== target.code).map((item) => ({ areaCode: item.code, areaName: item.code, cityCode: item.code.slice(0, 2), districtCode: item.code.slice(0, 5), geographicUnit: "ADMINISTRATIVE_DONG" as const, basePeriod: baseDate, unit: "명", value: item.value })),
     };
     return {
       sourceCode: this.code, status: "success", recordsRead: data.rows.length, recordsSaved: 1, recordsSkipped: data.rows.length - values.length,
       indicators: [{
         code: "living_population", name: "일평균 생활인구", area: "활력·혼잡", value: target.value, previousValue: null, unit: "명",
-        baseDate: displayDate, comparisonLabel: "구로구 다른 행정동 평균 대비", favorableDirection: "CONTEXT_DEPENDENT", status: "success",
-        source: "행정동 단위 서울 생활인구(내국인)", sourceUrl: "https://data.seoul.go.kr/dataList/OA-14991/S/1/datasetView.do", geographicUnit: "가리봉동 행정동 전체",
+        baseDate: displayDate, comparisonLabel: `${context.districtName} 다른 행정동 평균 대비`, favorableDirection: "CONTEXT_DEPENDENT", status: "success",
+        source: "행정동 단위 서울 생활인구(내국인)", sourceUrl: "https://data.seoul.go.kr/dataList/OA-14991/S/1/datasetView.do", geographicUnit: `${context.administrativeDongName} 행정동 전체`,
         collectedAt: context.now.toISOString(), updateCycle: "매일", statusMessage: null,
-        proxyDescription: "지역에 머문 인구 규모를 구로구 다른 행정동과 비교하며 주민 만족도를 직접 의미하지 않습니다.", series: [], spatialComparison,
+        proxyDescription: `지역에 머문 인구 규모를 ${context.districtName} 다른 행정동과 비교하며 주민 만족도를 직접 의미하지 않습니다.`, series: [], spatialComparison,
       }],
       rawPayloads: data.payloads,
     };

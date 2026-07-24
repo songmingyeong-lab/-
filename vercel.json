@@ -1,9 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    {
-      "path": "/api/cron/collect",
-      "schedule": "20 18 * * *"
-    }
+    { "path": "/api/cron/collect?area=garibong", "schedule": "20 18 * * *" },
+    { "path": "/api/cron/collect?area=changsin-1", "schedule": "25 18 * * *" },
+    { "path": "/api/cron/collect?area=changsin-2", "schedule": "30 18 * * *" },
+    { "path": "/api/cron/collect?area=changsin-3", "schedule": "35 18 * * *" },
+    { "path": "/api/cron/collect?area=sungin-1", "schedule": "40 18 * * *" }
   ]
 }

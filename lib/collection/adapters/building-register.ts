@@ -65,8 +65,8 @@ export const buildingRegisterAdapter: SourceAdapter = {
   cycle: "monthly",
   async collect(context) {
     const districtName = `${context.cityName} ${context.districtName}`;
-    const data = await fetchAllSeoulRows(context.apiKey, service, rowSchema, [" ", districtName, context.dongName]);
-    const summary = summarizeBuildingRegister(data.rows, context, context.now);
+    const data = await fetchAllSeoulRows(context.apiKey, service, rowSchema, [" ", districtName, context.legalDongName]);
+    const summary = summarizeBuildingRegister(data.rows, { ...context, dongName: context.legalDongName }, context.now);
 
     if (summary.totalCount === 0) {
       return {
@@ -77,20 +77,20 @@ export const buildingRegisterAdapter: SourceAdapter = {
         recordsSkipped: data.rows.length,
         indicators: [],
         rawPayloads: data.payloads,
-        error: "서울시 총괄표제부에서 가리봉동 자료를 찾지 못했습니다.",
+        error: `서울시 총괄표제부에서 ${context.legalDongName} 자료를 찾지 못했습니다.`,
       };
     }
 
     if (summary.agedRatio === null) {
-      return { sourceCode: this.code, status: "empty", recordsRead: data.rows.length, recordsSaved: 0, recordsSkipped: data.rows.length - summary.totalCount, indicators: [], rawPayloads: data.payloads, error: "가리봉동 총괄표제부의 사용승인일이 없어 노후건축물 비율을 계산할 수 없습니다." };
+      return { sourceCode: this.code, status: "empty", recordsRead: data.rows.length, recordsSaved: 0, recordsSkipped: data.rows.length - summary.totalCount, indicators: [], rawPayloads: data.payloads, error: `${context.legalDongName} 총괄표제부의 사용승인일이 없어 노후건축물 비율을 계산할 수 없습니다.` };
     }
     const districtRows = data.rows.filter((row) => row.SGG_CD_NM === districtName);
     const dongNames = [...new Set(districtRows.map((row) => row.STDG_CD_NM).filter(Boolean))];
     const summaries = dongNames.map((dongName) => ({ dongName, summary: summarizeBuildingRegister(districtRows, { cityName: context.cityName, districtName: context.districtName, dongName }, context.now) }));
     const basePeriod = seoulDate(context.now);
     const comparisonData = (unit: string, select: (item: typeof summary) => number | null) => ({
-      target: { areaCode: context.administrativeDongCode, areaName: context.dongName, cityCode: "11", districtCode: context.administrativeDongCode.slice(0, 5), geographicUnit: "LEGAL_DONG" as const, basePeriod, unit, value: select(summary) },
-      candidates: summaries.filter((item) => item.dongName !== context.dongName).map((item) => ({ areaCode: `LEGAL:${item.dongName}`, areaName: item.dongName, cityCode: "11", districtCode: context.administrativeDongCode.slice(0, 5), geographicUnit: "LEGAL_DONG" as const, basePeriod, unit, value: select(item.summary) })),
+      target: { areaCode: context.administrativeDongCode, areaName: context.legalDongName, cityCode: "11", districtCode: context.administrativeDongCode.slice(0, 5), geographicUnit: "LEGAL_DONG" as const, basePeriod, unit, value: select(summary) },
+      candidates: summaries.filter((item) => item.dongName !== context.legalDongName).map((item) => ({ areaCode: `LEGAL:${item.dongName}`, areaName: item.dongName, cityCode: "11", districtCode: context.administrativeDongCode.slice(0, 5), geographicUnit: "LEGAL_DONG" as const, basePeriod, unit, value: select(item.summary) })),
     });
 
     return {
@@ -108,16 +108,16 @@ export const buildingRegisterAdapter: SourceAdapter = {
           previousValue: null,
           unit: "%",
           baseDate: basePeriod,
-          comparisonLabel: "구로구 다른 법정동 평균 대비",
+          comparisonLabel: `${context.districtName} 다른 법정동 평균 대비`,
           favorableDirection: "LOWER_IS_BETTER",
           status: summary.coverageRate < 50 ? "insufficient_sample" : "success",
           source: "서울시 건축물대장 총괄표제부",
           sourceUrl: "https://data.seoul.go.kr/dataList/OA-22423/S/1/datasetView.do",
-          geographicUnit: `${context.districtName} ${context.dongName} 법정동`,
+          geographicUnit: `${context.districtName} ${context.legalDongName} 법정동`,
           collectedAt: context.now.toISOString(),
           updateCycle: "매일 1회(현재 현행화 일시 중단)",
-          statusMessage: `가리봉동 총괄표제부 ${summary.totalCount}건 중 사용승인일 확인 ${summary.knownCount}건으로 계산했습니다. 30년 이상 ${summary.agedCount}건, 승인일 누락 ${summary.missingCount}건이며 자료 완전성은 ${summary.coverageRate.toFixed(1)}%입니다.`,
-          proxyDescription: "총괄표제부가 생성된 대지 중 사용승인일 확인 건의 노후 비율이며 가리봉동의 모든 개별 건축물을 포함하는 비율은 아닙니다.",
+          statusMessage: `${context.legalDongName} 총괄표제부 ${summary.totalCount}건 중 사용승인일 확인 ${summary.knownCount}건으로 계산했습니다. 30년 이상 ${summary.agedCount}건, 승인일 누락 ${summary.missingCount}건이며 자료 완전성은 ${summary.coverageRate.toFixed(1)}%입니다.`,
+          proxyDescription: `총괄표제부가 생성된 대지 중 사용승인일 확인 건의 노후 비율이며 ${context.legalDongName}의 모든 개별 건축물을 포함하는 비율은 아닙니다.`,
           series: [],
           spatialComparison: comparisonData("%", (item) => item.agedRatio),
         },
@@ -134,10 +134,10 @@ export const buildingRegisterAdapter: SourceAdapter = {
           status: "success",
           source: "서울시 건축물대장 총괄표제부",
           sourceUrl: "https://data.seoul.go.kr/dataList/OA-22423/S/1/datasetView.do",
-          geographicUnit: `${context.districtName} ${context.dongName} 법정동`,
+          geographicUnit: `${context.districtName} ${context.legalDongName} 법정동`,
           collectedAt: context.now.toISOString(),
           updateCycle: "매일 1회(현재 현행화 일시 중단)",
-          statusMessage: `가리봉동 법정동 총괄표제부 ${summary.totalCount}건의 주용도코드명 기준으로 교육연구및복지시설 ${summary.educationWelfareCount}개, 문화및집회시설 ${summary.cultureAssemblyCount}개를 합산했습니다.`,
+          statusMessage: `${context.legalDongName} 법정동 총괄표제부 ${summary.totalCount}건의 주용도코드명 기준으로 교육연구및복지시설 ${summary.educationWelfareCount}개, 문화및집회시설 ${summary.cultureAssemblyCount}개를 합산했습니다.`,
           proxyDescription: "총괄표제부 주용도코드명으로 분류한 시설 수이며 실제 거점 기능, 운영 여부 또는 이용 가능 여부를 뜻하지 않습니다.",
           series: [],
           spatialComparison: comparisonData("개", (item) => item.targetFacilityCount),

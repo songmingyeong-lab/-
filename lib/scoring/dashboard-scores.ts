@@ -4,18 +4,25 @@ import { buildGuroDongComparisonGroup, buildSeoulDistrictComparisonGroup, format
 import { calculateCategoryScore, calculateComparisonRate, calculateIndicatorScore, calculateMean, calculateMedian, formatScoreInterpretation } from "@/lib/scoring/calculations";
 import type { CategoryScoreResult, IndicatorScoreConfig, IndicatorScoreResult } from "@/lib/scoring/types";
 
-interface OfficialAreaCodes { targetDongCode: string | null; targetDistrictCode: string | null }
+interface OfficialAreaCodes {
+  targetDongCode: string | null;
+  targetDistrictCode: string | null;
+  targetDongName?: string;
+  targetDistrictName?: string;
+}
 
-function emptyResult(indicator: DashboardIndicator | undefined, config: IndicatorScoreConfig, calculatedAt: string, reason: string, informationOnly = false): IndicatorScoreResult {
+function emptyResult(indicator: DashboardIndicator | undefined, config: IndicatorScoreConfig, calculatedAt: string, reason: string, officialCodes: OfficialAreaCodes, informationOnly = false): IndicatorScoreResult {
   const districtInformationOnly = config.indicatorCode === "noise_vibration_complaint_count" || config.indicatorCode === "resident_program_count";
   const geographicUnit = config.comparisonScope === "GURO_DONG" ? "ADMINISTRATIVE_DONG" : config.comparisonScope === "SEOUL_DISTRICT" || districtInformationOnly ? "DISTRICT" : null;
+  const dongName = officialCodes.targetDongName ?? "가리봉동";
+  const districtName = officialCodes.targetDistrictName ?? "구로구";
   return {
     indicatorCode: config.indicatorCode, indicatorName: indicator?.name ?? config.indicatorCode, category: config.category,
     comparisonScope: config.comparisonScope,
     targetGeographicUnit: geographicUnit,
     comparisonGeographicUnit: geographicUnit,
-    targetAreaName: config.comparisonScope === "SEOUL_DISTRICT" || districtInformationOnly ? "구로구" : "가리봉동",
-    comparisonAreaDescription: formatComparisonScope(config.comparisonScope), score: null,
+    targetAreaName: config.comparisonScope === "SEOUL_DISTRICT" || districtInformationOnly ? districtName : dongName,
+    comparisonAreaDescription: formatComparisonScope(config.comparisonScope, dongName, districtName), score: null,
     scoreStatus: informationOnly ? "INFORMATION_ONLY" : "NOT_CALCULABLE", scoreReason: reason, direction: config.direction,
     targetValue: indicator?.value ?? null, comparisonValue: null, comparisonMean: null, comparisonMedian: null,
     comparisonMethod: config.comparisonMethod, comparisonRate: null, difference: null, comparisonCount: 0,
@@ -25,13 +32,13 @@ function emptyResult(indicator: DashboardIndicator | undefined, config: Indicato
   };
 }
 
-function provisionalResult(indicator: DashboardIndicator, config: IndicatorScoreConfig, calculatedAt: string): IndicatorScoreResult {
+function provisionalResult(indicator: DashboardIndicator, config: IndicatorScoreConfig, calculatedAt: string, officialCodes: OfficialAreaCodes): IndicatorScoreResult {
   const district = config.comparisonScope === "SEOUL_DISTRICT";
   return {
-    ...emptyResult(indicator, config, calculatedAt, "동일 공간 비교군이 없어 현재값을 기준점으로 둔 임시 3점입니다."),
+    ...emptyResult(indicator, config, calculatedAt, "동일 공간 비교군이 없어 현재값을 기준점으로 둔 임시 3점입니다.", officialCodes),
     targetGeographicUnit: district ? "DISTRICT" : "ADMINISTRATIVE_DONG",
     comparisonGeographicUnit: district ? "DISTRICT" : "ADMINISTRATIVE_DONG",
-    targetAreaName: district ? "구로구" : "가리봉동",
+    targetAreaName: district ? officialCodes.targetDistrictName ?? "구로구" : officialCodes.targetDongName ?? "가리봉동",
     comparisonAreaDescription: "대체 기준(동일 공간 비교자료 미확보)",
     score: 3,
     scoreStatus: "CALCULATED",
@@ -49,13 +56,13 @@ export function calculateDashboardScores(indicators: DashboardIndicator[], offic
   const indicatorByCode = new Map(indicators.map((indicator) => [indicator.code, indicator]));
   const results = INDICATOR_SCORE_CONFIG.filter((config) => config.enabled).map((config): IndicatorScoreResult => {
     const indicator = indicatorByCode.get(config.indicatorCode);
-    if (config.comparisonScope === "INFORMATION_ONLY" || config.direction === "INFORMATION_ONLY") return emptyResult(indicator, config, calculatedAt, config.informationOnlyReason ?? "정보 제공용 지표입니다.", true);
-    if (!indicator) return emptyResult(indicator, config, calculatedAt, "대시보드에 지표가 없습니다.");
-    if (indicator.value === null) return emptyResult(indicator, config, calculatedAt, indicator.statusMessage ?? "대상값이 없습니다.");
+    if (config.comparisonScope === "INFORMATION_ONLY" || config.direction === "INFORMATION_ONLY") return emptyResult(indicator, config, calculatedAt, config.informationOnlyReason ?? "정보 제공용 지표입니다.", officialCodes, true);
+    if (!indicator) return emptyResult(indicator, config, calculatedAt, "대시보드에 지표가 없습니다.", officialCodes);
+    if (indicator.value === null) return emptyResult(indicator, config, calculatedAt, indicator.statusMessage ?? "대상값이 없습니다.", officialCodes);
     if (!indicator.spatialComparison) return config.allowProvisionalScore
-      ? provisionalResult(indicator, config, calculatedAt)
-      : emptyResult(indicator, config, calculatedAt, "동일 공간단위 비교자료가 수집되지 않았습니다.");
-    if (!officialCodes.targetDongCode || !officialCodes.targetDistrictCode) return emptyResult(indicator, config, calculatedAt, "공식 지역코드 설정이 없습니다.");
+      ? provisionalResult(indicator, config, calculatedAt, officialCodes)
+      : emptyResult(indicator, config, calculatedAt, "동일 공간단위 비교자료가 수집되지 않았습니다.", officialCodes);
+    if (!officialCodes.targetDongCode || !officialCodes.targetDistrictCode) return emptyResult(indicator, config, calculatedAt, "공식 지역코드 설정이 없습니다.", officialCodes);
     try {
       const values = [indicator.spatialComparison.target, ...indicator.spatialComparison.candidates];
       const group = config.comparisonScope === "GURO_DONG"
@@ -64,9 +71,9 @@ export function calculateDashboardScores(indicators: DashboardIndicator[], offic
       const comparisonMean = calculateMean(group.comparisons.map((value) => value.value));
       const comparisonMedian = calculateMedian(group.comparisons.map((value) => value.value));
       const comparisonValue = config.comparisonMethod === "MEAN" ? comparisonMean : comparisonMedian;
-      if (group.comparisons.length === 0 && config.allowProvisionalScore) return provisionalResult(indicator, config, calculatedAt);
+      if (group.comparisons.length === 0 && config.allowProvisionalScore) return provisionalResult(indicator, config, calculatedAt, officialCodes);
       if (group.comparisons.length < config.minimumComparisonCount && (!config.allowRelaxedMinimum || group.comparisons.length === 0)) return {
-        ...emptyResult(indicator, config, calculatedAt, `유효 비교 대상이 ${group.comparisons.length}개로 최소 ${config.minimumComparisonCount}개보다 적습니다.`),
+        ...emptyResult(indicator, config, calculatedAt, `유효 비교 대상이 ${group.comparisons.length}개로 최소 ${config.minimumComparisonCount}개보다 적습니다.`, officialCodes),
         targetGeographicUnit: group.target.geographicUnit,
         comparisonGeographicUnit: group.target.geographicUnit,
         targetAreaName: group.target.areaName,
@@ -79,14 +86,14 @@ export function calculateDashboardScores(indicators: DashboardIndicator[], offic
         basePeriod: group.target.basePeriod,
       };
       const comparisonRate = calculateComparisonRate(group.target.value, comparisonValue);
-      if (group.target.value === null || comparisonValue === null || comparisonRate === null) return emptyResult(indicator, config, calculatedAt, "대상값 또는 비교값이 없어 비교율을 계산할 수 없습니다.");
+      if (group.target.value === null || comparisonValue === null || comparisonRate === null) return emptyResult(indicator, config, calculatedAt, "대상값 또는 비교값이 없어 비교율을 계산할 수 없습니다.", officialCodes);
       const score = calculateIndicatorScore(comparisonRate, config.direction);
-      if (score === null) return emptyResult(indicator, config, calculatedAt, "정보 제공용 지표입니다.", true);
+      if (score === null) return emptyResult(indicator, config, calculatedAt, "정보 제공용 지표입니다.", officialCodes, true);
       const relaxedSource = group.target.geographicUnit === "LEGAL_DONG" || group.comparisons.some((value) => value.areaCode.startsWith("NAME:") || value.areaCode.startsWith("LEGAL:"));
       const relaxedSample = group.comparisons.length < config.minimumComparisonCount;
       const comparisonAreaDescription = relaxedSource
-        ? `${formatComparisonScope(config.comparisonScope)} (명칭·법정동 기반 대체비교)`
-        : formatComparisonScope(config.comparisonScope);
+        ? `${formatComparisonScope(config.comparisonScope, officialCodes.targetDongName, officialCodes.targetDistrictName)} (명칭·법정동 기반 대체비교)`
+        : formatComparisonScope(config.comparisonScope, officialCodes.targetDongName, officialCodes.targetDistrictName);
       return {
         indicatorCode: indicator.code, indicatorName: indicator.name, category: config.category, comparisonScope: config.comparisonScope,
         targetGeographicUnit: group.target.geographicUnit, comparisonGeographicUnit: group.target.geographicUnit,
@@ -99,7 +106,7 @@ export function calculateDashboardScores(indicators: DashboardIndicator[], offic
         dataSource: indicator.source, calculatedAt,
       };
     } catch (error) {
-      return emptyResult(indicator, config, calculatedAt, error instanceof Error ? error.message : "공간 비교 설정 오류");
+      return emptyResult(indicator, config, calculatedAt, error instanceof Error ? error.message : "공간 비교 설정 오류", officialCodes);
     }
   });
   return INDICATOR_AREA_ORDER.map((category) => {

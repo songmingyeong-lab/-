@@ -19,6 +19,9 @@ h1 { margin: 0; font-size: clamp(25px, 4vw, 38px); line-height: 1.25; letter-spa
 .status-panel { min-width: 260px; border: 1px solid rgba(255,255,255,.22); border-radius: 10px; padding: 14px 16px; background: rgba(255,255,255,.08); }
 .status-line { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; padding: 4px 0; }
 .content { padding: 24px 0 64px; }
+.area-selector { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 14px; color: var(--navy); font-size: 13px; font-weight: 700; }
+.area-selector select { min-width: 210px; padding: 9px 34px 9px 11px; border: 1px solid #aebbc7; border-radius: 7px; background: white; color: var(--foreground); cursor: pointer; }
+.area-selector select:focus { outline: 3px solid rgba(36,91,145,.2); border-color: var(--blue); }
 .notice { display: flex; gap: 12px; align-items: flex-start; background: #fff8e5; border: 1px solid #ead49b; color: #594813; padding: 15px 17px; border-radius: 8px; font-size: 14px; line-height: 1.55; }
 .badge { display: inline-flex; align-items: center; white-space: nowrap; border-radius: 999px; padding: 4px 9px; font-size: 11px; font-weight: 700; border: 1px solid currentColor; }
 .badge-mock { color: #7b4b00; background: #fff1c7; }
@@ -86,4 +89,4 @@ h2 { margin: 0; font-size: 22px; letter-spacing: -.025em; }
 .methodology { margin-top: 30px; background: white; border: 1px solid var(--border); border-radius: 10px; padding: 22px; line-height: 1.65; }
 .methodology p { margin: 10px 0 0; color: #44515f; font-size: 14px; }
 @media (max-width: 760px) { .topbar-inner { flex-direction: column; }.status-panel { width: 100%; min-width: 0; }.overview, .card-grid { grid-template-columns: 1fr; }.overview-grid { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 430px) { .topbar-inner, .content { width: min(100% - 20px, 1180px); }.overview-grid { grid-template-columns: 1fr; }.metric strong { font-size: 27px; } }
+@media (max-width: 430px) { .topbar-inner, .content { width: min(100% - 20px, 1180px); }.overview-grid { grid-template-columns: 1fr; }.metric strong { font-size: 27px; }.area-selector { align-items: stretch; flex-direction: column; }.area-selector select { width: 100%; } }

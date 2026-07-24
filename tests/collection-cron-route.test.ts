@@ -42,4 +42,13 @@ describe("collection cron route", () => {
     expect(body.cycles).toEqual(["daily", "monthly", "quarterly"]);
     expect(body.summaries[0].results[0]).not.toHaveProperty("rawPayloads");
   });
+
+  it("collects the area selected in the cron query", async () => {
+    const request = new Request("http://local.test/api/cron/collect?area=changsin-2", { headers: { authorization: "Bearer test-cron-secret-value" } });
+    const response = await runScheduledCollection(request, new Date("2026-07-24T18:30:00Z"));
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.area).toBe("changsin-2");
+    expect(runCollectionMock).toHaveBeenCalledWith({ mode: "live", area: "changsin-2", cycle: "daily" });
+  });
 });

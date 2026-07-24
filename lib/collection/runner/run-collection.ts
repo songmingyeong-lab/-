@@ -1,4 +1,4 @@
-import areas from "@/data/target-areas.json";
+import { DEFAULT_AREA_SLUG, getTargetArea } from "@/lib/areas";
 import { getMockDashboardData } from "@/lib/dashboard-data";
 import { sourceAdapters } from "@/lib/collection/adapters";
 import { persistAdapterResult } from "@/lib/collection/runner/persist-result";
@@ -32,11 +32,11 @@ const indicatorSources: Record<string, string> = {
 
 export async function runCollection(options: RunOptions = {}) {
   const environment = getEnvironment(options.mode);
-  const area = areas.find((item) => item.slug === (options.area ?? "garibong"));
+  const area = getTargetArea(options.area ?? DEFAULT_AREA_SLUG);
   if (!area) throw new Error(`지원하지 않는 지역입니다: ${options.area}`);
 
   if (environment.DATA_MODE === "mock") {
-    const dashboard = getMockDashboardData();
+    const dashboard = getMockDashboardData(area.slug);
     const indicators = options.indicator ? dashboard.indicators.filter((item) => item.code === options.indicator) : dashboard.indicators;
     const results: AdapterResult[] = indicators.map((item) => ({ sourceCode: indicatorSources[item.code], status: item.value === null ? "empty" : "success", recordsRead: item.series.length, recordsSaved: item.value === null ? 0 : 1, recordsSkipped: 0, indicators: [item] }));
     if (environment.DATABASE_URL) {
@@ -49,7 +49,18 @@ export async function runCollection(options: RunOptions = {}) {
   const results: AdapterResult[] = [];
   for (const adapter of selected) {
     try {
-      const result = await adapter.collect({ areaSlug: area.slug, cityName: area.cityName, districtName: area.districtName, administrativeDongCode: area.administrativeDongCode, legalDongCode: area.legalDongCode, dongName: area.dongName, apiKey: environment.SEOUL_OPEN_API_KEY!, now: new Date() });
+      const result = await adapter.collect({
+        areaSlug: area.slug,
+        cityName: area.cityName,
+        districtName: area.districtName,
+        administrativeDongCode: area.administrativeDongCode,
+        administrativeDongName: area.administrativeDongName,
+        legalDongCode: area.legalDongCode,
+        legalDongName: area.legalDongName,
+        dongName: area.administrativeDongName,
+        apiKey: environment.SEOUL_OPEN_API_KEY!,
+        now: new Date(),
+      });
       if (!environment.DATABASE_URL) throw new Error("live 수집 결과를 반영하려면 DATABASE_URL이 필요합니다.");
       await persistAdapterResult(area.slug, result, environment.SAVE_RAW_RESPONSES === "true");
       results.push(result);

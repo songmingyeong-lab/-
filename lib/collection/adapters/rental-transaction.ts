@@ -50,7 +50,7 @@ export const rentalTransactionAdapter: SourceAdapter = {
     }
 
     if (!data) return { sourceCode: this.code, status: "empty", recordsRead: 0, recordsSaved: 0, recordsSkipped: 0, indicators: [] };
-    const rows = data.rows.filter((row) => row.CGG_CD === districtCode && row.STDG_CD === legalDongCode && row.STDG_NM === context.dongName);
+    const rows = data.rows.filter((row) => row.CGG_CD === districtCode && row.STDG_CD === legalDongCode && row.STDG_NM === context.legalDongName);
     const summary = summarizeMonthlyRent(rows);
     if (summary.median === null) return { sourceCode: this.code, status: "empty", recordsRead: data.rows.length, recordsSaved: 0, recordsSkipped: data.rows.length, indicators: [], rawPayloads: data.payloads };
 
@@ -77,14 +77,14 @@ export const rentalTransactionAdapter: SourceAdapter = {
         status: insufficient ? "insufficient_sample" : "success",
         source: "서울시 부동산 전월세가 정보",
         sourceUrl: "https://data.seoul.go.kr/dataList/OA-21276/S/1/datasetView.do",
-        geographicUnit: `${context.districtName} ${context.dongName} 법정동`,
+        geographicUnit: `${context.districtName} ${context.legalDongName} 법정동`,
         collectedAt: context.now.toISOString(),
         updateCycle: "실시간",
         statusMessage: `${summary.latestMonth.slice(0, 4)}년 ${Number(summary.latestMonth.slice(4))}월 현재 공개된 월세 계약 ${summary.sampleCount}건의 임대료(RTFE) 중위값입니다.${insufficient ? " 표본이 5건 미만이므로 참고값입니다." : ""} 주거용 전월세 자료이며 상가 임대료가 아닙니다.`,
-        proxyDescription: "가리봉동 주거용 월세 계약의 공개 표본을 나타내며 상가 임대료나 모든 임대주택의 시세를 뜻하지 않습니다.",
+        proxyDescription: `${context.legalDongName} 주거용 월세 계약의 공개 표본을 나타내며 상가 임대료나 모든 임대주택의 시세를 뜻하지 않습니다.`,
         series: [],
         spatialComparison: {
-          target: { areaCode: context.administrativeDongCode, areaName: context.dongName, cityCode: "11", districtCode, geographicUnit: "LEGAL_DONG", basePeriod: summary.latestMonth, unit: "만원", value: summary.median },
+          target: { areaCode: context.administrativeDongCode, areaName: context.legalDongName, cityCode: "11", districtCode, geographicUnit: "LEGAL_DONG", basePeriod: summary.latestMonth, unit: "만원", value: summary.median },
           candidates: comparisonSummaries.filter((item) => item.code !== legalDongCode).map((item) => ({ areaCode: `LEGAL:${item.code}`, areaName: item.name, cityCode: "11", districtCode, geographicUnit: "LEGAL_DONG", basePeriod: summary.latestMonth, unit: "만원", value: item.summary.median })),
         },
       }],

@@ -1,4 +1,5 @@
 import fixture from "@/data/fixtures/dashboard.json";
+import { DEFAULT_AREA_SLUG, resolveTargetArea } from "@/lib/areas";
 import type { DashboardData, DashboardIndicator, DataStatus, IndicatorArea } from "@/lib/indicators/types";
 import { calculateDashboardScores } from "@/lib/scoring/dashboard-scores";
 import { SCORING_NOTICE, SCORING_VERSION } from "@/lib/scoring/indicator-score-config";
@@ -11,9 +12,21 @@ const areaLabels: Record<string, IndicatorArea> = {
   COMMUNITY_HUB: "공동체·거점",
 };
 
-export function getMockDashboardData(): DashboardData {
-  const data = structuredClone(fixture) as Omit<DashboardData, "categoryScores" | "scoringVersion" | "scoringNotice">;
-  return attachScores(data);
+function configuredArea(slug?: string | null): DashboardData["area"] {
+  const area = resolveTargetArea(slug);
+  return {
+    slug: area.slug,
+    name: `${area.cityName} ${area.districtName} ${area.administrativeDongName}`,
+    cityName: area.cityName,
+    districtName: area.districtName,
+    administrativeDongName: area.administrativeDongName,
+    administrativeDongCode: area.administrativeDongCode,
+    legalDongName: area.legalDongName,
+    legalDongCode: area.legalDongCode,
+    projectName: area.projectName,
+    projectType: area.projectType,
+    scope: area.scopeDescription,
+  };
 }
 
 function attachScores(
@@ -23,77 +36,137 @@ function attachScores(
   const targetDistrictCode = targetDongCode?.slice(0, 5) ?? null;
   return {
     ...data,
-    categoryScores: calculateDashboardScores(data.indicators, { targetDongCode, targetDistrictCode }),
+    categoryScores: calculateDashboardScores(data.indicators, {
+      targetDongCode,
+      targetDistrictCode,
+      targetDongName: data.area.administrativeDongName,
+      targetDistrictName: data.area.districtName,
+    }),
     scoringVersion: SCORING_VERSION,
     scoringNotice: SCORING_NOTICE,
   };
 }
 
-function liveErrorData(message: string): DashboardData {
-  const data = getMockDashboardData();
+export function getMockDashboardData(areaSlug = DEFAULT_AREA_SLUG): DashboardData {
+  const selectedArea = configuredArea(areaSlug);
+  const data = structuredClone(fixture) as Omit<DashboardData, "categoryScores" | "scoringVersion" | "scoringNotice">;
+  if (selectedArea.slug === DEFAULT_AREA_SLUG) return attachScores({ ...data, area: selectedArea });
   return attachScores({
-    ...data, mode: "live", status: "error", lastCollectedAt: null,
-    indicators: data.indicators.map((item) => ({ ...item, value: null, previousValue: null, baseDate: null, collectedAt: null, status: "error", statusMessage: message, series: [] })),
+    ...data,
+    area: selectedArea,
+    lastCollectedAt: null,
+    status: "empty",
+    indicators: data.indicators.map((indicator) => ({
+      ...indicator,
+      value: null,
+      previousValue: null,
+      baseDate: null,
+      collectedAt: null,
+      status: "empty",
+      statusMessage: `${selectedArea.administrativeDongName}의 mock 스냅샷은 없습니다. live 모드에서 초기 수집을 실행하세요.`,
+      series: [],
+      spatialComparison: undefined,
+    })),
   });
 }
 
-export async function getDashboardData(): Promise<DashboardData> {
-  if ((process.env.DATA_MODE ?? "mock") === "mock") return getMockDashboardData();
-  if (!process.env.DATABASE_URL) return liveErrorData("DATABASE_URL이 설정되지 않았습니다.");
+function liveErrorData(message: string, areaSlug?: string): DashboardData {
+  const data = getMockDashboardData(areaSlug);
+  return attachScores({
+    ...data,
+    mode: "live",
+    status: "error",
+    lastCollectedAt: null,
+    indicators: data.indicators.map((item) => ({
+      ...item,
+      value: null,
+      previousValue: null,
+      baseDate: null,
+      collectedAt: null,
+      status: "error",
+      statusMessage: message,
+      series: [],
+      spatialComparison: undefined,
+    })),
+  });
+}
+
+export async function getDashboardData(areaSlug = DEFAULT_AREA_SLUG): Promise<DashboardData> {
+  if ((process.env.DATA_MODE ?? "mock") === "mock") return getMockDashboardData(areaSlug);
+  if (!process.env.DATABASE_URL) return liveErrorData("DATABASE_URL이 설정되지 않았습니다.", areaSlug);
   try {
     const { getPrisma } = await import("@/lib/db/prisma");
     const prisma = getPrisma();
-    const area = await prisma.area.findUnique({ where: { slug: "garibong" } });
-    if (!area) return liveErrorData("DB seed가 필요합니다.");
-    const definitions = await prisma.indicatorDefinition.findMany({ where: { active: true }, include: { source: true, observations: { where: { areaId: area.id }, orderBy: { baseDate: "desc" }, take: 400 } } });
-    const snapshotByCode = new Map(getMockDashboardData().indicators.map((indicator) => [indicator.code, indicator]));
+    const area = await prisma.area.findUnique({ where: { slug: areaSlug } });
+    if (!area) return liveErrorData(`${areaSlug} 지역이 DB에 없습니다. npm run db:seed를 실행하세요.`, areaSlug);
+    const definitions = await prisma.indicatorDefinition.findMany({
+      where: { active: true },
+      include: { source: true, observations: { where: { areaId: area.id }, orderBy: { baseDate: "desc" }, take: 400 } },
+    });
     const indicators: DashboardIndicator[] = definitions.map((definition) => {
       const [latest, previous] = definition.observations;
-      const snapshot = snapshotByCode.get(definition.code);
-      if (!latest && snapshot) {
-        return {
-          ...snapshot,
-          name: definition.name,
-          area: areaLabels[definition.areaGroup],
-          proxyDescription: definition.proxyDescription,
-        };
-      }
       const metadata = latest?.metadata as { series?: DashboardIndicator["series"]; statusMessage?: string | null; spatialComparison?: DashboardIndicator["spatialComparison"] } | null;
       const storedStatus = latest ? latest.status.toLowerCase() as DataStatus : definition.defaultStatus.toLowerCase() as DataStatus;
       const staleAt = latest ? new Date(latest.baseDate.getTime() + definition.staleAfterDays * 86_400_000) : null;
       const status = storedStatus === "success" && staleAt && staleAt < new Date() ? "stale" : storedStatus;
       return {
-        code: definition.code, name: definition.name, area: areaLabels[definition.areaGroup], value: latest?.value === null || latest?.value === undefined ? null : Number(latest.value),
-        previousValue: previous?.value === null || previous?.value === undefined ? null : Number(previous.value), unit: definition.unit,
-        baseDate: latest?.baseDate.toISOString().slice(0, 10) ?? null, comparisonLabel: definition.comparisonPeriod,
-        favorableDirection: definition.favorableDirection, status,
-        source: definition.source.name, sourceUrl: definition.source.sourceUrl, geographicUnit: latest?.geographicUnit ?? definition.geographicUnit,
-        collectedAt: latest?.collectedAt.toISOString() ?? null, updateCycle: definition.source.updateCycle, statusMessage: metadata?.statusMessage ?? latest?.errorMessage ?? definition.statusMessage,
+        code: definition.code,
+        name: definition.name,
+        area: areaLabels[definition.areaGroup],
+        value: latest?.value === null || latest?.value === undefined ? null : Number(latest.value),
+        previousValue: previous?.value === null || previous?.value === undefined ? null : Number(previous.value),
+        unit: definition.unit,
+        baseDate: latest?.baseDate.toISOString().slice(0, 10) ?? null,
+        comparisonLabel: definition.comparisonPeriod,
+        favorableDirection: definition.favorableDirection,
+        status,
+        source: definition.source.name,
+        sourceUrl: definition.source.sourceUrl,
+        geographicUnit: latest?.geographicUnit ?? definition.geographicUnit,
+        collectedAt: latest?.collectedAt.toISOString() ?? null,
+        updateCycle: definition.source.updateCycle,
+        statusMessage: metadata?.statusMessage ?? latest?.errorMessage ?? definition.statusMessage,
         proxyDescription: definition.proxyDescription,
-        series: metadata?.series ?? [...definition.observations].reverse().map((observation) => ({ date: observation.baseDate.toISOString().slice(0, 10), value: observation.value === null ? null : Number(observation.value) })),
+        series: metadata?.series ?? [...definition.observations].reverse().map((observation) => ({
+          date: observation.baseDate.toISOString().slice(0, 10),
+          value: observation.value === null ? null : Number(observation.value),
+        })),
         spatialComparison: metadata?.spatialComparison,
       };
     });
     const observedAt = definitions.flatMap((item) => item.observations).map((item) => item.collectedAt).sort((a, b) => b.getTime() - a.getTime())[0];
-    const snapshotAt = indicators
-      .filter((indicator) => snapshotByCode.has(indicator.code) && indicator.collectedAt)
-      .map((indicator) => new Date(indicator.collectedAt as string))
-      .sort((a, b) => b.getTime() - a.getTime())[0];
-    const lastCollectedAt = [observedAt, snapshotAt].filter((value): value is Date => Boolean(value)).sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
     const completeStatuses: DataStatus[] = ["success", "stale", "mock"];
     const completed = indicators.filter((item) => completeStatuses.includes(item.status)).length;
-    const status: DataStatus = indicators.length === 0 ? "empty" : completed === indicators.length ? "success" : completed > 0 ? "partial_success" : indicators.every((item) => item.status === "empty") ? "empty" : "partial_success";
+    const status: DataStatus = indicators.length === 0
+      ? "empty"
+      : completed === indicators.length
+        ? "success"
+        : completed > 0
+          ? "partial_success"
+          : indicators.every((item) => item.status === "empty")
+            ? "empty"
+            : "partial_success";
+    const target = resolveTargetArea(area.slug);
     return attachScores({
-      mode: "live", status, lastCollectedAt: lastCollectedAt?.toISOString() ?? null,
+      mode: "live",
+      status,
+      lastCollectedAt: observedAt?.toISOString() ?? null,
       area: {
-        slug: area.slug, name: `${area.cityName} ${area.districtName} ${area.administrativeDongName ?? area.dongName}`, districtName: area.districtName,
-        administrativeDongName: area.administrativeDongName ?? area.dongName, administrativeDongCode: area.administrativeDongCode,
-        legalDongName: area.legalDongName ?? area.dongName, legalDongCode: area.legalDongCode,
-        projectName: area.projectName ?? "확인 필요", projectType: area.projectType ?? "확인 필요", scope: "가리봉동 행정동 전체",
+        slug: area.slug,
+        name: `${area.cityName} ${area.districtName} ${area.administrativeDongName ?? area.dongName}`,
+        cityName: area.cityName,
+        districtName: area.districtName,
+        administrativeDongName: area.administrativeDongName ?? area.dongName,
+        administrativeDongCode: area.administrativeDongCode,
+        legalDongName: area.legalDongName ?? area.dongName,
+        legalDongCode: area.legalDongCode,
+        projectName: area.projectName ?? "확인 필요",
+        projectType: area.projectType ?? "확인 필요",
+        scope: target.scopeDescription,
       },
       indicators,
     });
   } catch (error) {
-    return liveErrorData(error instanceof Error ? error.message : "DB 조회 실패");
+    return liveErrorData(error instanceof Error ? error.message : "DB 조회 실패", areaSlug);
   }
 }

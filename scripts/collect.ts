@@ -1,5 +1,6 @@
 import "../envConfig";
 import { runCollection } from "../lib/collection/runner/run-collection";
+import { targetAreas } from "../lib/areas";
 
 function argument(name: string) {
   const direct = process.argv.find((item) => item.startsWith(`--${name}=`));
@@ -9,13 +10,19 @@ function argument(name: string) {
 }
 
 async function main() {
-  const summary = await runCollection({
-    mode: argument("mode") as "mock" | "live" | undefined,
-    source: argument("source"), indicator: argument("indicator"), area: argument("area"),
-    cycle: argument("cycle") as "daily" | "monthly" | "quarterly" | undefined,
-  });
-  console.log(JSON.stringify(summary, (_key, value) => _key === "rawPayloads" ? undefined : value, 2));
-  if (summary.status === "error") process.exitCode = 1;
+  const selectedArea = argument("area");
+  const areaSlugs = selectedArea ? [selectedArea] : targetAreas.map((area) => area.slug);
+  const summaries = [];
+  for (const area of areaSlugs) {
+    const summary = await runCollection({
+      mode: argument("mode") as "mock" | "live" | undefined,
+      source: argument("source"), indicator: argument("indicator"), area,
+      cycle: argument("cycle") as "daily" | "monthly" | "quarterly" | undefined,
+    });
+    summaries.push({ area, ...summary });
+  }
+  console.log(JSON.stringify({ status: summaries.some((item) => item.status === "error") ? "error" : summaries.some((item) => item.status === "partial_success") ? "partial_success" : "success", areas: summaries }, (_key, value) => _key === "rawPayloads" ? undefined : value, 2));
+  if (summaries.some((item) => item.status === "error")) process.exitCode = 1;
 }
 
 main().catch((error) => {

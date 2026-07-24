@@ -8,7 +8,16 @@ describe("internal API", () => {
     const response = await getAreas();
     const body = await response.json();
     expect(response.status).toBe(200);
+    expect(body.data).toHaveLength(5);
     expect(body.data[0].slug).toBe("garibong");
+    expect(body.data[1]).toMatchObject({ slug: "changsin-1", administrativeDongCode: "11110670", legalDongCode: "1111017400" });
+  });
+  it("returns the selected Jongno target without reusing Garibong mock values", async () => {
+    const response = await getIndicator(new Request("http://local.test"), { params: Promise.resolve({ areaSlug: "changsin-1", indicatorCode: "living_population" }) });
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.data.value).toBeNull();
+    expect(body.data.statusMessage).toContain("창신1동");
   });
   it("returns an indicator and its chart points", async () => {
     const indicatorResponse = await getIndicator(new Request("http://local.test"), { params: Promise.resolve({ areaSlug: "garibong", indicatorCode: "living_population" }) });

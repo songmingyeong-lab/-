@@ -7,7 +7,10 @@ export interface CollectionContext {
   cityName: string;
   districtName: string;
   administrativeDongCode: string;
+  administrativeDongName: string;
   legalDongCode: string;
+  legalDongName: string;
+  /** @deprecated 행정동 이름 호환용. 새 코드는 administrativeDongName을 사용합니다. */
   dongName: string;
   apiKey: string;
   now: Date;

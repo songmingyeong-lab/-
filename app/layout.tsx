@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "가리봉동 도시재생 주민체감 보조지표",
-  description: "서울 공공데이터 기반 가리봉동 도시재생 주민체감 Proxy 대시보드",
+  title: "서울 도시재생 주민체감 보조지표",
+  description: "서울 공공데이터 기반 도시재생 대상 행정동 주민체감 Proxy 대시보드",
 };
 
 export default function RootLayout({

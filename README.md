@@ -1,6 +1,6 @@
-# 가리봉동 도시재생 주민체감 보조지표
+# 서울 도시재생 대상 행정동 주민체감 보조지표
 
-서울특별시 구로구 가리봉동 행정동 전체를 대상으로 공공데이터 기반 주민체감 보조지표를 수집하고 시각화하는 MVP입니다. 과거 `가리봉 도시재생활성화사업`을 설명 맥락으로 사용하지만, 지표의 공간범위는 도시재생활성화구역 경계가 아닌 **가리봉동 행정동 전체**입니다.
+서울특별시 구로구 가리봉동과 종로구 창신1동·창신2동·창신3동·숭인1동을 대상으로 공공데이터 기반 주민체감 보조지표를 수집하고 시각화하는 MVP입니다. 화면의 드롭다운에서 행정동을 선택합니다. 지표의 공간범위는 도시재생 사업구역 경계가 아니라 **선택한 행정동 전체**이며, 법정동 자료는 창신동 또는 숭인동처럼 행정동과 다른 범위일 수 있습니다.
 
 > 본 지표는 주민 만족도를 직접 측정한 값이 아니라 생활환경, 지역활력 및 상권 변화를 보조적으로 확인하기 위한 Proxy입니다. 공식 도시재생 성과평가와 주민 설문 결과를 함께 고려해야 합니다.
 
@@ -80,9 +80,10 @@ npm.cmd run collect:quarterly
 npm.cmd run collect -- --source living-population
 npm.cmd run collect -- --indicator living_population
 npm.cmd run collect -- --area garibong
+npm.cmd run collect -- --area changsin-1
 ```
 
-한 소스가 실패해도 다른 소스 수집은 계속됩니다. 결과 요약은 소스 수, 성공·실패 수, 저장·건너뜀 수와 소스별 오류를 포함합니다. 인증키와 원본 payload는 출력하지 않습니다.
+`--area`를 생략하면 가리봉동, 창신1동, 창신2동, 창신3동, 숭인1동을 차례로 모두 수집합니다. 한 소스가 실패해도 다른 소스 수집은 계속됩니다. 결과 요약은 지역별 소스 수, 성공·실패 수, 저장·건너뜀 수와 소스별 오류를 포함합니다. 인증키와 원본 payload는 출력하지 않습니다.
 
 ## 내부 API
 
@@ -122,7 +123,7 @@ npm.cmd run build
 - 생활인구·상권분석: 8자리 주민등록 행정기관코드
 - 건축물·주소: 10자리 법정동코드
 
-행정동 코드는 2026-07-18 `SPOP_LOCAL_RESD_DONG` sample 응답에서 기준일 2026-06-30의 가리봉동 레코드로 검증했습니다. 법정동 코드는 건축물 adapter 활성화 전에 최신 공식 원장과 실제 응답을 다시 대조해야 합니다. 코드만 같거나 이름만 같은 레코드는 수집하지 않습니다.
+가리봉동 행정동 코드는 `SPOP_LOCAL_RESD_DONG` 표본 응답으로, 창신1·2·3동과 숭인1동 행정동 코드는 서울시 상권분석 행정동 코드표와 종로구 행정동 목록으로 대조했습니다. 창신1·2·3동의 법정동 자료는 창신동 코드 `1111017400`, 숭인1동은 숭인동 코드 `1111017500`을 사용합니다. 코드만 같거나 이름만 같은 레코드는 수집하지 않습니다.
 
 ## 상태와 결측 처리
 
@@ -195,7 +196,7 @@ Remove-Item Env:RUN_SUPABASE_INTEGRATION
 
 ## 자동·즉시 데이터 수집 설정
 
-공공데이터 원천은 일간·월간·분기로 갱신되므로 초 단위 스트리밍이 아니라 원천 주기에 맞춘 자동 polling 방식입니다. `vercel.json`의 Vercel Cron은 매일 UTC 18:20(한국시간 다음 날 03:20)에 `/api/cron/collect`를 호출합니다.
+공공데이터 원천은 일간·월간·분기로 갱신되므로 초 단위 스트리밍이 아니라 원천 주기에 맞춘 자동 polling 방식입니다. `vercel.json`의 Vercel Cron은 매일 UTC 18:20부터 5분 간격으로 각 대상 지역의 `/api/cron/collect?area=...`를 호출합니다. Vercel Hobby에서는 실제 시작 시간이 설정 시각에서 최대 59분 정도 달라질 수 있습니다.
 
 - 매일: 일간 adapter
 - 매월 2일(한국시간): 일간 + 월간 adapter
@@ -224,4 +225,4 @@ $body = @{ mode = "live"; area = "garibong"; cycle = "daily" } | ConvertTo-Json
 Invoke-RestMethod -Method Post -Uri "https://여기에-배포도메인/api/collection/run" -Headers $headers -ContentType "application/json" -Body $body
 ```
 
-`cycle`은 `daily`, `monthly`, `quarterly` 중 하나입니다. 특정 수집기만 실행하려면 body에서 `cycle` 대신 `source`를 사용합니다. 수집 응답과 로그에는 원본 API payload를 포함하지 않습니다.
+`area`는 `garibong`, `changsin-1`, `changsin-2`, `changsin-3`, `sungin-1` 중 하나입니다. `cycle`은 `daily`, `monthly`, `quarterly` 중 하나입니다. 특정 수집기만 실행하려면 body에서 `cycle` 대신 `source`를 사용합니다. 수집 응답과 로그에는 원본 API payload를 포함하지 않습니다.

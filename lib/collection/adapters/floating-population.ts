@@ -14,7 +14,7 @@ export const floatingPopulationAdapter: SourceAdapter = {
   async collect(context) {
     const data = await fetchAllSeoulRows(context.apiKey, service, rowSchema);
     const row = data.rows
-      .filter((item) => item.ADSTRD_CD === context.administrativeDongCode && item.ADSTRD_CD_NM === context.dongName)
+      .filter((item) => item.ADSTRD_CD === context.administrativeDongCode && item.ADSTRD_CD_NM === context.administrativeDongName)
       .sort((a, b) => b.STDR_YYQU_CD.localeCompare(a.STDR_YYQU_CD))[0];
     if (!row) return { sourceCode: this.code, status: "empty", recordsRead: data.rows.length, recordsSaved: 0, recordsSkipped: data.rows.length, indicators: [] };
     const labels = ["00~06", "06~11", "11~14", "14~17", "17~21", "21~24"];
@@ -41,13 +41,13 @@ export const floatingPopulationAdapter: SourceAdapter = {
       indicators: [{
         code: "floating_population", name: "총 유동인구", area: "활력·혼잡", value: row.TOT_FLPOP_CO, previousValue: null, unit: "명",
         baseDate: `${year}-${endMonth}-${["03", "12"].includes(endMonth) ? "31" : "30"}`, comparisonLabel: "전분기 대비", favorableDirection: "CONTEXT_DEPENDENT", status: "success",
-        source: "서울시 상권분석서비스(길단위인구-행정동)", sourceUrl: "https://data.seoul.go.kr/dataList/OA-22178/S/1/datasetView.do", geographicUnit: "가리봉동 행정동 전체",
+        source: "서울시 상권분석서비스(길단위인구-행정동)", sourceUrl: "https://data.seoul.go.kr/dataList/OA-22178/S/1/datasetView.do", geographicUnit: `${context.administrativeDongName} 행정동 전체`,
         collectedAt: context.now.toISOString(), updateCycle: "분기", statusMessage: null,
         proxyDescription: "시간대별 지역 활동량의 대리 지표이며 실제 보행자 수와 동일하지 않습니다.", series: labels.map((date, index) => ({ date, value: values[index] })), spatialComparison: comparisonData("명", (item) => item.TOT_FLPOP_CO),
       }, ...(peak ? [{
         code: "peak_floating_time_band", name: "최대 집중 시간대 유동인구", area: "활력·혼잡" as const, value: peak.value, previousValue: null, unit: "명",
         baseDate: `${year}-${endMonth}-${["03", "12"].includes(endMonth) ? "31" : "30"}`, comparisonLabel: "전분기 대비", favorableDirection: "NEUTRAL" as const, status: "success" as const,
-        source: "서울시 상권분석서비스(길단위인구-행정동)", sourceUrl: "https://data.seoul.go.kr/dataList/OA-22178/S/1/datasetView.do", geographicUnit: "가리봉동 행정동 전체",
+        source: "서울시 상권분석서비스(길단위인구-행정동)", sourceUrl: "https://data.seoul.go.kr/dataList/OA-22178/S/1/datasetView.do", geographicUnit: `${context.administrativeDongName} 행정동 전체`,
         collectedAt: context.now.toISOString(), updateCycle: "분기", statusMessage: `6개 시간대 중 ${peak.label} 구간이 ${peak.value.toLocaleString("ko-KR")}명으로 가장 큽니다. 혼잡도가 아니라 유동인구 집중 시간대입니다.`,
         proxyDescription: "시간대별 유동인구 집중을 나타내며 면적 기준 혼잡도나 체감 혼잡도를 직접 뜻하지 않습니다.", series: labels.map((date, index) => ({ date, value: values[index] })), spatialComparison: comparisonData("명", peakValue),
       }] : [])], rawPayloads: data.payloads,
