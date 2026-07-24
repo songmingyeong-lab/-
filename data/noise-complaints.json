@@ -1,0 +1,33 @@
+{
+  "year": "2025",
+  "verifiedAt": "2026-07-24",
+  "sourceUrl": "https://data.seoul.go.kr/dataList/DT201004J030005/S/2/datasetView.do",
+  "collectionMethod": "OFFICIAL_STATISTICS_VERIFIED_SNAPSHOT",
+  "rows": [
+    { "districtName": "종로구", "value": 3384 },
+    { "districtName": "중구", "value": 1261 },
+    { "districtName": "용산구", "value": 2590 },
+    { "districtName": "성동구", "value": 2164 },
+    { "districtName": "광진구", "value": 1080 },
+    { "districtName": "동대문구", "value": 2915 },
+    { "districtName": "중랑구", "value": 1297 },
+    { "districtName": "성북구", "value": 1665 },
+    { "districtName": "강북구", "value": 984 },
+    { "districtName": "도봉구", "value": 608 },
+    { "districtName": "노원구", "value": 1210 },
+    { "districtName": "은평구", "value": 812 },
+    { "districtName": "서대문구", "value": 2217 },
+    { "districtName": "마포구", "value": 2667 },
+    { "districtName": "양천구", "value": 850 },
+    { "districtName": "강서구", "value": 1927 },
+    { "districtName": "구로구", "value": 1064 },
+    { "districtName": "금천구", "value": 853 },
+    { "districtName": "영등포구", "value": 3576 },
+    { "districtName": "동작구", "value": 1385 },
+    { "districtName": "관악구", "value": 1652 },
+    { "districtName": "서초구", "value": 3578 },
+    { "districtName": "강남구", "value": 8704 },
+    { "districtName": "송파구", "value": 2102 },
+    { "districtName": "강동구", "value": 2090 }
+  ]
+}

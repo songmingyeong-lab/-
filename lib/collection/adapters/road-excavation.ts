@@ -39,7 +39,9 @@ export const roadExcavationAdapter: SourceAdapter = {
   cycle: "daily",
   async collect(context) {
     const data = await fetchAllSeoulRows(context.apiKey, service, rowSchema);
-    const summary = summarizeRoadExcavationDurations(data.rows, context.districtName, context.administrativeDongName);
+    const sourceDongName = context.legalDongName;
+    const usesLegalDongProxy = context.administrativeDongName !== sourceDongName;
+    const summary = summarizeRoadExcavationDurations(data.rows, context.districtName, sourceDongName);
     if (summary.averageDays === null) {
       return { sourceCode: this.code, status: "empty", recordsRead: data.rows.length, recordsSaved: 0, recordsSkipped: data.rows.length, indicators: [], rawPayloads: data.payloads };
     }
@@ -67,15 +69,15 @@ export const roadExcavationAdapter: SourceAdapter = {
         status: "success",
         source: "서울시 도로굴착 공사 현황",
         sourceUrl: "https://data.seoul.go.kr/dataList/OA-22901/S/1/datasetView.do",
-        geographicUnit: `${context.districtName} ${context.administrativeDongName}`,
+        geographicUnit: `${context.districtName} ${sourceDongName} 법정동${usesLegalDongProxy ? `(${context.administrativeDongName} 대체값)` : ""}`,
         collectedAt: context.now.toISOString(),
         updateCycle: "매일",
-        statusMessage: `공개된 전체 이력 중 ${context.administrativeDongName} ${summary.rawCount}행을 허가번호·공사기간 기준으로 중복 제거한 ${summary.uniqueCount}건의 평균입니다. 시작일과 종료일을 모두 포함했으며 기간 해석 가능 ${summary.parsedCount}건을 사용했습니다.`,
+        statusMessage: `공개된 전체 이력 중 ${sourceDongName} ${summary.rawCount}행을 허가번호·공사기간 기준으로 중복 제거한 ${summary.uniqueCount}건의 평균입니다. 시작일과 종료일을 모두 포함했으며 기간 해석 가능 ${summary.parsedCount}건을 사용했습니다.${usesLegalDongProxy ? ` API가 ${context.administrativeDongName}을 구분하지 않아 ${sourceDongName} 법정동 전체 값을 대체값으로 표시합니다.` : ""}`,
         proxyDescription: "공사별 예정기간의 평균이며 실제 작업일수, 현재 진행 건수 또는 주민 체감 불편을 직접 뜻하지 않습니다.",
         series: [],
         spatialComparison: {
-          target: { areaCode: context.administrativeDongCode, areaName: context.administrativeDongName, cityCode: "11", districtCode, geographicUnit: "ADMINISTRATIVE_DONG", basePeriod, unit: "일", value: Math.round(summary.averageDays * 10) / 10 },
-          candidates: comparisonSummaries.filter((item) => item.dongName !== context.administrativeDongName).map((item) => ({ areaCode: `NAME:${item.dongName}`, areaName: item.dongName, cityCode: "11", districtCode, geographicUnit: "ADMINISTRATIVE_DONG", basePeriod, unit: "일", value: item.value })),
+          target: { areaCode: context.administrativeDongCode, areaName: sourceDongName, cityCode: "11", districtCode, geographicUnit: "LEGAL_DONG", basePeriod, unit: "일", value: Math.round(summary.averageDays * 10) / 10 },
+          candidates: comparisonSummaries.filter((item) => item.dongName !== sourceDongName).map((item) => ({ areaCode: `LEGAL:${item.dongName}`, areaName: item.dongName, cityCode: "11", districtCode, geographicUnit: "LEGAL_DONG", basePeriod, unit: "일", value: item.value })),
         },
       }],
       rawPayloads: data.payloads,
