@@ -1,6 +1,6 @@
 import "../envConfig";
 import { runCollection } from "../lib/collection/runner/run-collection";
-import { targetAreas } from "../lib/areas";
+import { collectionTargetAreas } from "../lib/areas";
 
 function argument(name: string) {
   const direct = process.argv.find((item) => item.startsWith(`--${name}=`));
@@ -11,7 +11,7 @@ function argument(name: string) {
 
 async function main() {
   const selectedArea = argument("area");
-  const areaSlugs = selectedArea ? [selectedArea] : targetAreas.map((area) => area.slug);
+  const areaSlugs = selectedArea ? [selectedArea] : collectionTargetAreas.map((area) => area.slug);
   const summaries = [];
   for (const area of areaSlugs) {
     const summary = await runCollection({

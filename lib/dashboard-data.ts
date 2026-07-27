@@ -3,6 +3,7 @@ import { DEFAULT_AREA_SLUG, resolveTargetArea } from "@/lib/areas";
 import type { DashboardData, DashboardIndicator, DataStatus, IndicatorArea } from "@/lib/indicators/types";
 import { calculateDashboardScores } from "@/lib/scoring/dashboard-scores";
 import { SCORING_NOTICE, SCORING_VERSION } from "@/lib/scoring/indicator-score-config";
+import { aggregateCompositeDashboard } from "@/lib/composite-dashboard";
 
 const areaLabels: Record<string, IndicatorArea> = {
   HOUSING_ENVIRONMENT: "주거환경",
@@ -11,6 +12,7 @@ const areaLabels: Record<string, IndicatorArea> = {
   VITALITY_CONGESTION: "활력·혼잡",
   COMMUNITY_HUB: "공동체·거점",
 };
+const RECOVERED_CONDITION_SEARCH_CODES = new Set(["monthly_average_income", "income_level", "rent_level"]);
 
 function formatSeoulDate(value: Date) {
   return new Date(value.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -51,9 +53,48 @@ function attachScores(
   };
 }
 
+function modernizeFixtureIndicators(indicators: DashboardIndicator[]) {
+  const store = indicators.find((item) => item.code === "store_count")!;
+  const floating = indicators.find((item) => item.code === "floating_population")!;
+  const peak = indicators.find((item) => item.code === "peak_floating_time_band")!;
+  const missing = (
+    base: DashboardIndicator,
+    code: string,
+    name: string,
+    unit: string,
+    statusMessage: string,
+    status: DataStatus = "empty",
+  ): DashboardIndicator => ({
+    ...base, code, name, value: null, previousValue: null, unit, status, statusMessage, series: [], spatialComparison: undefined,
+  });
+  const concentration = floating.value && peak.value ? (peak.value / floating.value) * 100 : null;
+  return [
+    ...indicators.filter((item) => !["floating_population", "peak_floating_time_band"].includes(item.code)),
+    missing(store, "store_density", "1,000가구당 점포 수", "개/1,000가구", "확인 스냅샷에는 같은 분기의 가구 수가 없어 점포 밀도 대체값을 계산하지 않았습니다."),
+    missing(store, "opening_count", "개업 점포 수", "개", "확인 스냅샷에 개업 점포 수 원자료가 없습니다."),
+    missing(store, "closing_count", "폐업 점포 수", "개", "확인 스냅샷에 폐업 점포 수 원자료가 없습니다."),
+    missing(store, "monthly_average_income", "월평균 소득", "원/월", "확인 스냅샷에는 조건검색 소득구간이 없습니다. live 모드에서 최신 조건검색 값을 수집합니다."),
+    missing(store, "income_level", "소득분위", "분위", "확인 스냅샷에는 조건검색 소득분위가 없습니다. live 모드에서 최신 조건검색 값을 수집합니다."),
+    missing(store, "household_count", "가구 수", "가구", "확인 스냅샷에 같은 기준분기의 가구 수가 없습니다."),
+    missing(store, "rental_burden", "임대료 부담", "%", "행정동 상가 임대시세와 호환 가능한 매출 자료가 모두 필요합니다."),
+    missing(store, "rent_level", "상가 환산임대료", "원/3.3㎡·월", "확인 스냅샷에는 조건검색 임대시세가 없습니다. live 모드에서 최신 조건검색 값을 수집합니다."),
+    {
+      ...floating, code: "street_floating_population_density", name: "길 단위 유동인구 밀도", unit: "명(합계 대체)",
+      statusMessage: "도로길이·면적 분모가 없어 전체 길 단위 유동인구 합계를 대체점수로 표시한 확인 스냅샷입니다.",
+    },
+    {
+      ...peak, code: "floating_population_concentration", name: "시간대별 유동인구 집중도", value: concentration, unit: "%",
+      statusMessage: "최대 시간대 유동인구를 전체 길 단위 유동인구로 나눈 확인용 대체 스냅샷입니다.",
+    },
+    { ...floating, code: "street_floating_population_total", name: "길 단위 유동인구 합계", favorableDirection: "NEUTRAL" as const },
+    missing(floating, "floating_population_by_weekday", "요일별 길 단위 유동인구", "명", "확인 스냅샷에 요일별 원자료가 없습니다."),
+  ];
+}
+
 export function getMockDashboardData(areaSlug = DEFAULT_AREA_SLUG): DashboardData {
   const selectedArea = configuredArea(areaSlug);
   const data = structuredClone(fixture) as Omit<DashboardData, "categoryScores" | "scoringVersion" | "scoringNotice">;
+  data.indicators = modernizeFixtureIndicators(data.indicators);
   if (selectedArea.slug === DEFAULT_AREA_SLUG) return attachScores({ ...data, area: selectedArea });
   return attachScores({
     ...data,
@@ -96,6 +137,11 @@ function liveErrorData(message: string, areaSlug?: string): DashboardData {
 }
 
 export async function getDashboardData(areaSlug = DEFAULT_AREA_SLUG): Promise<DashboardData> {
+  const selected = resolveTargetArea(areaSlug);
+  if (selected.memberAreaSlugs?.length) {
+    const members = await Promise.all(selected.memberAreaSlugs.map((slug) => getDashboardData(slug)));
+    return attachScores(aggregateCompositeDashboard(members, selected));
+  }
   if ((process.env.DATA_MODE ?? "mock") === "mock") return getMockDashboardData(areaSlug);
   if (!process.env.DATABASE_URL) return liveErrorData("DATABASE_URL이 설정되지 않았습니다.", areaSlug);
   try {
@@ -108,7 +154,13 @@ export async function getDashboardData(areaSlug = DEFAULT_AREA_SLUG): Promise<Da
       include: { source: true, observations: { where: { areaId: area.id }, orderBy: { baseDate: "desc" }, take: 400 } },
     });
     const indicators: DashboardIndicator[] = definitions.map((definition) => {
-      const [latest, previous] = definition.observations;
+      const successfulObservations = definition.observations.filter((observation) =>
+        observation.status === "SUCCESS" && observation.value !== null
+      );
+      const displayObservations = RECOVERED_CONDITION_SEARCH_CODES.has(definition.code) && successfulObservations.length > 0
+        ? successfulObservations
+        : definition.observations;
+      const [latest, previous] = displayObservations;
       const metadata = latest?.metadata as { series?: DashboardIndicator["series"]; statusMessage?: string | null; spatialComparison?: DashboardIndicator["spatialComparison"] } | null;
       const storedStatus = latest ? latest.status.toLowerCase() as DataStatus : definition.defaultStatus.toLowerCase() as DataStatus;
       const staleAt = latest ? new Date(latest.baseDate.getTime() + definition.staleAfterDays * 86_400_000) : null;

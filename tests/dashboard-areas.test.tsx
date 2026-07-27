@@ -10,7 +10,8 @@ describe("Dashboard areas", () => {
   it("renders the five fixed areas in the required order", () => {
     const { container } = render(<Dashboard data={getMockDashboardData()} />);
     const headings = [...container.querySelectorAll(".area-heading h3")].map((heading) => heading.textContent);
-    expect(headings).toEqual([...INDICATOR_AREA_ORDER]);
+    expect(headings).toEqual([...INDICATOR_AREA_ORDER, "참고 지역 경제 수준"]);
+    expect(screen.getByText("점수 미반영")).toBeInTheDocument();
   });
 
   it("does not display the project start and end years", () => {
@@ -23,5 +24,14 @@ describe("Dashboard areas", () => {
     expect(screen.getAllByText("영역 진단점수")).toHaveLength(5);
     expect(screen.getAllByText("산출 보류").length).toBeGreaterThanOrEqual(5);
     expect(screen.queryByText("전체 종합점수")).not.toBeInTheDocument();
+  });
+
+  it("hides internal household and opening/closing counts and moves economic references", () => {
+    render(<Dashboard data={getMockDashboardData()} />);
+    expect(screen.queryByRole("heading", { name: "총 가구 수" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "개업 점포 수" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "폐업 점포 수" })).not.toBeInTheDocument();
+    expect(screen.getByText("월평균 소득")).toBeInTheDocument();
+    expect(screen.getByText("주거 월세 중위값")).toBeInTheDocument();
   });
 });

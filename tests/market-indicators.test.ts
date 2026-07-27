@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { summarizeCommercialStoreRows } from "@/lib/collection/adapters/commercial-store";
-import { INCOME_UNAVAILABLE_REASON } from "@/lib/collection/adapters/income-consumption";
+import { INCOME_UNAVAILABLE_REASON, parseIncomeBand } from "@/lib/collection/adapters/income-consumption";
 import { selectLatestResidentPopulationRows, type ResidentPopulationRow } from "@/lib/collection/adapters/resident-population";
 import { summarizeEstimatedSales } from "@/lib/collection/adapters/estimated-sales";
 import { summarizeMonthlyRent } from "@/lib/collection/adapters/rental-transaction";
@@ -12,12 +12,26 @@ describe("market indicator calculations", () => {
       { STDR_YYQU_CD: "20261", ADSTRD_CD: "11530595", ADSTRD_CD_NM: "가리봉동", SVC_INDUTY_CD: "A", SVC_INDUTY_CD_NM: "업종A", SIMILR_INDUTY_STOR_CO: 60, OPBIZ_RT: 5, OPBIZ_STOR_CO: 3, CLSBIZ_RT: 10, CLSBIZ_STOR_CO: 6 },
       { STDR_YYQU_CD: "20261", ADSTRD_CD: "11530595", ADSTRD_CD_NM: "가리봉동", SVC_INDUTY_CD: "B", SVC_INDUTY_CD_NM: "업종B", SIMILR_INDUTY_STOR_CO: 40, OPBIZ_RT: 5, OPBIZ_STOR_CO: 2, CLSBIZ_RT: 5, CLSBIZ_STOR_CO: 2 },
     ]);
-    expect(result).toEqual({ storeCount: 100, openedCount: 5, closedCount: 8, openingRate: 5, closingRate: 8 });
+    expect(result).toEqual({
+      storeCount: 100,
+      openedCount: 5,
+      closedCount: 8,
+      openingRate: 5,
+      closingRate: 8,
+      openingRateSource: "OFFICIAL_WEIGHTED",
+      closingRateSource: "OFFICIAL_WEIGHTED",
+    });
   });
 
   it("keeps households at the administrative-dong level and documents unavailable income", () => {
     const household: ResidentPopulationRow = { STDR_YYQU_CD: "20261", ADSTRD_CD: "11110670", ADSTRD_CD_NM: "창신1동", TOT_HSHLD_CO: 3_100 };
-    expect(INCOME_UNAVAILABLE_REASON).toContain("2026년 5월 13일");
+    expect(INCOME_UNAVAILABLE_REASON).toContain("조건검색");
+    expect(parseIncomeBand("5분위:2,020,852~2,440,599원")).toEqual({
+      level: 5,
+      lower: 2_020_852,
+      upper: 2_440_599,
+      midpoint: 2_230_725.5,
+    });
     expect(household.TOT_HSHLD_CO).toBe(3_100);
   });
 

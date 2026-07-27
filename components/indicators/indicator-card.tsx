@@ -21,11 +21,11 @@ function formatCollectedAt(value: string | null) {
   return `수집 ${new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeZone: "Asia/Seoul" }).format(new Date(value))}`;
 }
 
-const directionLabels: Record<SpatialScoringDirection, string> = {
-  HIGHER_IS_BETTER: "증가 시 개선 방향",
-  LOWER_IS_BETTER: "감소 시 개선 방향",
-  BALANCED: "비교집단과의 편차 기준",
-  INFORMATION_ONLY: "정보 제공용",
+const scoreFormulaLabels: Record<SpatialScoringDirection, string> = {
+  HIGHER_IS_BETTER: "비교율 = (대상값-비교평균)÷|비교평균|×100. +20% 이상 5점, +5~+20% 4점, -5~+5% 3점, -20~-5% 2점, -20% 이하 1점",
+  LOWER_IS_BETTER: "비교율 = (대상값-비교평균)÷|비교평균|×100. -20% 이하 5점, -20~-5% 4점, -5~+5% 3점, +5~+20% 2점, +20% 이상 1점",
+  BALANCED: "비교율 = (대상값-비교평균)÷|비교평균|×100. |비교율| 5% 미만 5점, 5~10% 4점, 10~20% 3점, 20~35% 2점, 35% 이상 1점",
+  INFORMATION_ONLY: "참고정보이므로 점수를 산정하지 않습니다.",
 };
 
 function formatScoreValue(value: number | null, unit: string) {
@@ -33,6 +33,16 @@ function formatScoreValue(value: number | null, unit: string) {
 }
 
 export function IndicatorCard({ indicator, score }: { indicator: DashboardIndicator; score?: IndicatorScoreResult }) {
+  const comparisonValues = indicator.spatialComparison?.candidates
+    .map((candidate) => candidate.value)
+    .filter((value): value is number => value !== null) ?? [];
+  const rawComparisonMean = comparisonValues.length
+    ? comparisonValues.reduce((sum, value) => sum + value, 0) / comparisonValues.length
+    : null;
+  const rawComparisonRate = indicator.value !== null && rawComparisonMean !== null && rawComparisonMean !== 0
+    ? ((indicator.value - rawComparisonMean) / Math.abs(rawComparisonMean)) * 100
+    : null;
+  const comparisonRate = score?.comparisonRate ?? rawComparisonRate;
   const missingReason = indicator.value === null
     ? indicator.statusMessage ?? missingReasonFallback[indicator.status] ?? "현재 공개 자료만으로 값을 산출할 수 없습니다."
     : null;
@@ -42,10 +52,11 @@ export function IndicatorCard({ indicator, score }: { indicator: DashboardIndica
       <div className="card-head"><div><div className="category">{indicator.area}</div><h3 id={`indicator-${indicator.code}`}>{indicator.name}</h3></div><span className={`badge ${statusClass}`}>{labels[indicator.status]}</span></div>
       <div className="metric"><strong>{indicator.value === null ? "자료 없음" : indicator.value.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}</strong>{indicator.value !== null && <span>{indicator.unit}</span>}</div>
       <div className="comparison">
-        {score?.comparisonRate === null || score?.comparisonRate === undefined
+        {comparisonRate === null || comparisonRate === undefined
           ? "공간 비교자료 없음"
-          : <><span>{score.comparisonRate > 0 ? "↑" : score.comparisonRate < 0 ? "↓" : "→"} 비교평균 대비 {Math.abs(score.comparisonRate).toFixed(1)}%</span><span className="comparison-label interpret-neutral">{score.interpretation}</span></>}
+          : <><span>{comparisonRate > 0 ? "↑" : comparisonRate < 0 ? "↓" : "→"} 비교평균 대비 {Math.abs(comparisonRate).toFixed(1)}%</span>{score && <span className="comparison-label interpret-neutral">{score.interpretation}</span>}</>}
       </div>
+      {indicator.value !== null && indicator.previousValue !== null && <p className="score-interpretation">이전 분기 대비 {indicator.previousValue === 0 ? "비교 불가" : `${((indicator.value - indicator.previousValue) / Math.abs(indicator.previousValue) * 100).toFixed(1)}%`}</p>}
       {score && <section className="indicator-score" aria-label={`${indicator.name} 공공데이터 기반 지표점수`}>
         <div className="indicator-score-head"><span>공공데이터 기반 지표점수</span><strong>{score.score === null ? "산출 불가" : `${score.score.toFixed(1)} / 5.0`}</strong></div>
         <p className="score-interpretation">점수 상태: {score.scoreStatus === "CALCULATED" ? "산출 완료" : score.scoreStatus === "INFORMATION_ONLY" ? "정보 제공용" : "산출 불가"} · 공간비교 점수 · {score.interpretation}</p>
@@ -58,7 +69,7 @@ export function IndicatorCard({ indicator, score }: { indicator: DashboardIndica
           <div><dt>비교범위</dt><dd>{score.comparisonAreaDescription}</dd></div>
           <div><dt>기준기간</dt><dd>{score.basePeriod ?? "없음"}</dd></div>
         </dl>
-        <p className="score-direction">산정 방향: {directionLabels[score.direction]}</p>
+        <p className="score-direction">점수 산정식: {scoreFormulaLabels[score.direction]}</p>
         {score.direction === "BALANCED" && <p className="context-score-notice">이 지표는 높고 낮음 자체를 긍정·부정으로 단정하지 않고 같은 자치구 다른 행정동의 일반적 수준에서 벗어난 정도를 평가했습니다.</p>}
       </section>}
       <IndicatorChart data={indicator.series} unit={indicator.unit} name={indicator.name} />

@@ -14,6 +14,8 @@ function storeIndicator(comparisonCount: number): DashboardIndicator {
   const source = getMockDashboardData().indicators.find((indicator) => indicator.code === "store_count")!;
   return {
     ...source,
+    code: "store_density",
+    name: "1,000가구당 점포 수",
     value: 120,
     unit: "개",
     baseDate: "2026Q1",
@@ -36,13 +38,13 @@ describe("대시보드 공간비교 점수 조정", () => {
 
   it("GURO_DONG 비교군이 최소 5개면 지표점수를 계산한다", () => {
     const categories = calculateDashboardScores([storeIndicator(5)], codes, "2026-07-19T00:00:00Z");
-    const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_count")!;
+    const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_density")!;
     expect(score).toMatchObject({ score: 2, scoreStatus: "CALCULATED", comparisonCount: 5, comparisonMean: 100, comparisonRate: 20 });
   });
 
   it("GURO_DONG 비교군이 5개 미만이면 점수를 보류한다", () => {
     const categories = calculateDashboardScores([storeIndicator(4)], codes);
-    const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_count")!;
+    const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_density")!;
     expect(score).toMatchObject({ score: null, scoreStatus: "NOT_CALCULABLE", comparisonCount: 4 });
     expect(score.scoreReason).toContain("최소 5개");
   });

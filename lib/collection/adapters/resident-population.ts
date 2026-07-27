@@ -4,14 +4,14 @@ import { quarterEndDate } from "@/lib/collection/quarter";
 import type { SourceAdapter } from "@/lib/collection/types";
 
 const service = "VwsmAdstrdRepopW";
-const rowSchema = z.object({
+export const residentPopulationRowSchema = z.object({
   STDR_YYQU_CD: z.coerce.string(),
   ADSTRD_CD: z.coerce.string(),
   ADSTRD_CD_NM: z.string(),
   TOT_HSHLD_CO: z.coerce.number().nullable(),
 });
 
-export type ResidentPopulationRow = z.infer<typeof rowSchema>;
+export type ResidentPopulationRow = z.infer<typeof residentPopulationRowSchema>;
 
 export function selectLatestResidentPopulationRows(rows: ResidentPopulationRow[]) {
   const quarter = rows.reduce((latest, row) => row.STDR_YYQU_CD > latest ? row.STDR_YYQU_CD : latest, "");
@@ -22,7 +22,7 @@ export const residentPopulationAdapter: SourceAdapter = {
   code: "resident-population",
   cycle: "quarterly",
   async collect(context) {
-    const data = await fetchAllSeoulRows(context.apiKey, service, rowSchema);
+    const data = await fetchAllSeoulRows(context.apiKey, service, residentPopulationRowSchema);
     const latest = selectLatestResidentPopulationRows(data.rows);
     const quarter = latest.quarter;
     if (!quarter) return { sourceCode: this.code, status: "empty", recordsRead: 0, recordsSaved: 0, recordsSkipped: 0, indicators: [], rawPayloads: data.payloads };

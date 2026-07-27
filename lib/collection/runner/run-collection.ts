@@ -1,4 +1,4 @@
-import { DEFAULT_AREA_SLUG, getTargetArea } from "@/lib/areas";
+import { DEFAULT_AREA_SLUG, getTargetArea, isCompositeTargetArea } from "@/lib/areas";
 import { getMockDashboardData } from "@/lib/dashboard-data";
 import { sourceAdapters } from "@/lib/collection/adapters";
 import { persistAdapterResult } from "@/lib/collection/runner/persist-result";
@@ -17,16 +17,23 @@ const indicatorSources: Record<string, string> = {
   living_population: "living-population",
   aged_building_ratio: "building-register",
   store_count: "commercial-store",
+  store_density: "commercial-store",
   opening_count: "commercial-store",
   opening_rate: "commercial-store",
   closing_count: "commercial-store",
   closing_rate: "commercial-store",
   monthly_average_income: "income-consumption",
+  income_level: "income-consumption",
   household_count: "resident-population",
   median_monthly_rent: "rental-transaction",
+  rent_level: "commercial-rent-market",
   estimated_sales: "estimated-sales",
   floating_population: "floating-population",
   peak_floating_time_band: "floating-population",
+  street_floating_population_density: "floating-population",
+  floating_population_concentration: "floating-population",
+  street_floating_population_total: "floating-population",
+  floating_population_by_weekday: "floating-population",
   vacant_house_count: "vacant-house",
   road_excavation_active_count: "road-construction",
   noise_vibration_complaint_count: "noise-complaint",
@@ -38,6 +45,9 @@ export async function runCollection(options: RunOptions = {}) {
   const environment = getEnvironment(options.mode);
   const area = getTargetArea(options.area ?? DEFAULT_AREA_SLUG);
   if (!area) throw new Error(`지원하지 않는 지역입니다: ${options.area}`);
+  if (isCompositeTargetArea(area)) {
+    throw new Error("창신·숭인 통합값은 4개 행정동의 수집 결과를 화면 조회 시 집계합니다. 개별 행정동을 수집해 주세요.");
+  }
 
   if (environment.DATA_MODE === "mock") {
     const dashboard = getMockDashboardData(area.slug);

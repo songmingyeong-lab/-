@@ -3,6 +3,10 @@ import { CategoryScoreSummary } from "@/components/scores/category-score-summary
 import { INDICATOR_AREA_ORDER } from "@/lib/indicators/types";
 import type { DashboardData, DataStatus } from "@/lib/indicators/types";
 import { AreaSelector } from "@/components/dashboard/area-selector";
+import { EconomicContextCard } from "@/components/dashboard/economic-context-card";
+
+const ECONOMIC_CONTEXT_CODES = new Set(["monthly_average_income", "income_level", "median_monthly_rent", "rent_level"]);
+const HIDDEN_DETAIL_CODES = new Set(["household_count", "opening_count", "closing_count"]);
 
 const statusLabels: Record<DataStatus, string> = {
   loading: "불러오는 중", success: "수집 완료", empty: "자료 없음", stale: "갱신 필요", error: "수집 실패", mock: "공식자료 확인값", partial_success: "일부 수집",
@@ -18,11 +22,12 @@ export function Dashboard({ data, areas = [] }: { data: DashboardData; areas?: A
   const availableCount = data.indicators.filter((indicator) => indicator.value !== null).length;
   const pendingCount = data.indicators.length - availableCount;
   const usesSnapshot = data.indicators.some((indicator) => indicator.status === "mock");
+  const isComposite = data.area.administrativeDongCode?.includes("COMPOSITE") ?? false;
   return (
     <main className="dashboard-shell">
       <header className="topbar">
         <div className="topbar-inner">
-          <div><p className="eyebrow">SEOUL URBAN REGENERATION</p><h1>{data.area.administrativeDongName} 도시재생 주민체감 보조지표</h1><p className="subtitle">대상 지역: {data.area.cityName} {data.area.districtName} {data.area.administrativeDongName} · 행정동 전체</p></div>
+          <div><p className="eyebrow">SEOUL URBAN REGENERATION</p><h1>{data.area.administrativeDongName} 도시재생 주민체감 보조지표</h1><p className="subtitle">대상 지역: {data.area.cityName} {data.area.districtName} {data.area.administrativeDongName} · {isComposite ? "창신1·2·3동 및 숭인1동 통합 집계" : "행정동 전체"}</p></div>
           <div className="status-panel" aria-label="데이터 수집 상태">
             <div className="status-line"><span>데이터 모드</span><strong>{data.mode === "mock" ? "공식자료 확인 스냅샷" : usesSnapshot ? "실시간 수집 + 확인 스냅샷" : "실시간 수집 데이터"}</strong></div>
             <div className="status-line"><span>마지막 수집</span><strong>{formatCollectedAt(data.lastCollectedAt)}</strong></div>
@@ -48,7 +53,11 @@ export function Dashboard({ data, areas = [] }: { data: DashboardData; areas?: A
         <section aria-labelledby="indicators-title">
           <div className="section-heading"><div><h2 id="indicators-title">영역별 보조지표와 공간비교 점수</h2><p>같은 원천·기준기간·단위의 공간 비교율을 영역 안에서만 가중평균하며, 다섯 영역을 합친 종합점수는 만들지 않습니다.</p></div>{data.mode === "mock" && <span className="badge badge-mock">2026-07-18 확인 스냅샷</span>}</div>
           {INDICATOR_AREA_ORDER.map((area, index) => {
-            const indicators = data.indicators.filter((indicator) => indicator.area === area);
+            const indicators = data.indicators.filter((indicator) =>
+              indicator.area === area
+              && !ECONOMIC_CONTEXT_CODES.has(indicator.code)
+              && !HIDDEN_DETAIL_CODES.has(indicator.code)
+            );
             const categoryScore = data.categoryScores.find((result) => result.category === area);
             return <section className="indicator-area" aria-labelledby={`area-${index}`} key={area}>
               <div className="area-heading"><span>{index + 1}</span><h3 id={`area-${index}`}>{area}</h3></div>
@@ -58,6 +67,7 @@ export function Dashboard({ data, areas = [] }: { data: DashboardData; areas?: A
               {indicators.length > 0 ? <div className="card-grid">{indicators.map((indicator) => <IndicatorCard key={indicator.code} indicator={indicator} score={categoryScore?.indicatorScores.find((result) => result.indicatorCode === indicator.code)} />)}</div> : <div className="area-empty">연결된 지표가 없습니다. 공식 자료원과 공간단위를 확인 중입니다.</div>}
             </section>;
           })}
+          <EconomicContextCard indicators={data.indicators} />
         </section>
         <section className="methodology" aria-labelledby="methodology-title">
           <h2 id="methodology-title">데이터 출처·해석 안내</h2>

@@ -11,9 +11,9 @@ export function AreaSelector({ areas, selected }: { areas: AreaOption[]; selecte
   const router = useRouter();
   return (
     <label className="area-selector">
-      <span>행정동 선택</span>
+      <span>대상지역 선택</span>
       <select
-        aria-label="행정동 선택"
+        aria-label="대상지역 선택"
         value={selected}
         onChange={(event) => router.push(`/?area=${encodeURIComponent(event.target.value)}`)}
       >
