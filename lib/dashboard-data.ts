@@ -12,6 +12,10 @@ const areaLabels: Record<string, IndicatorArea> = {
   COMMUNITY_HUB: "공동체·거점",
 };
 
+function formatSeoulDate(value: Date) {
+  return new Date(value.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
 function configuredArea(slug?: string | null): DashboardData["area"] {
   const area = resolveTargetArea(slug);
   return {
@@ -116,7 +120,7 @@ export async function getDashboardData(areaSlug = DEFAULT_AREA_SLUG): Promise<Da
         value: latest?.value === null || latest?.value === undefined ? null : Number(latest.value),
         previousValue: previous?.value === null || previous?.value === undefined ? null : Number(previous.value),
         unit: definition.unit,
-        baseDate: latest?.baseDate.toISOString().slice(0, 10) ?? null,
+        baseDate: latest ? formatSeoulDate(latest.baseDate) : null,
         comparisonLabel: definition.comparisonPeriod,
         favorableDirection: definition.favorableDirection,
         status,
@@ -128,7 +132,7 @@ export async function getDashboardData(areaSlug = DEFAULT_AREA_SLUG): Promise<Da
         statusMessage: metadata?.statusMessage ?? latest?.errorMessage ?? definition.statusMessage,
         proxyDescription: definition.proxyDescription,
         series: metadata?.series ?? [...definition.observations].reverse().map((observation) => ({
-          date: observation.baseDate.toISOString().slice(0, 10),
+          date: formatSeoulDate(observation.baseDate),
           value: observation.value === null ? null : Number(observation.value),
         })),
         spatialComparison: metadata?.spatialComparison,

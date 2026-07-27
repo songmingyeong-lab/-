@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { summarizeCommercialStoreRows } from "@/lib/collection/adapters/commercial-store";
+import { INCOME_UNAVAILABLE_REASON } from "@/lib/collection/adapters/income-consumption";
+import { selectLatestResidentPopulationRows, type ResidentPopulationRow } from "@/lib/collection/adapters/resident-population";
 import { summarizeEstimatedSales } from "@/lib/collection/adapters/estimated-sales";
 import { summarizeMonthlyRent } from "@/lib/collection/adapters/rental-transaction";
 import { quarterEndDate, recentQuarterCodes } from "@/lib/collection/quarter";
@@ -11,6 +13,23 @@ describe("market indicator calculations", () => {
       { STDR_YYQU_CD: "20261", ADSTRD_CD: "11530595", ADSTRD_CD_NM: "가리봉동", SVC_INDUTY_CD: "B", SVC_INDUTY_CD_NM: "업종B", SIMILR_INDUTY_STOR_CO: 40, OPBIZ_RT: 5, OPBIZ_STOR_CO: 2, CLSBIZ_RT: 5, CLSBIZ_STOR_CO: 2 },
     ]);
     expect(result).toEqual({ storeCount: 100, openedCount: 5, closedCount: 8, openingRate: 5, closingRate: 8 });
+  });
+
+  it("keeps households at the administrative-dong level and documents unavailable income", () => {
+    const household: ResidentPopulationRow = { STDR_YYQU_CD: "20261", ADSTRD_CD: "11110670", ADSTRD_CD_NM: "창신1동", TOT_HSHLD_CO: 3_100 };
+    expect(INCOME_UNAVAILABLE_REASON).toContain("2026년 5월 13일");
+    expect(household.TOT_HSHLD_CO).toBe(3_100);
+  });
+
+  it("uses the latest quarter from resident-population rows when the API ignores the quarter path", () => {
+    const base = { ADSTRD_CD: "11110670", ADSTRD_CD_NM: "창신1동", TOT_HSHLD_CO: 3_100 };
+    const result = selectLatestResidentPopulationRows([
+      { ...base, STDR_YYQU_CD: "20241" },
+      { ...base, STDR_YYQU_CD: "20252", TOT_HSHLD_CO: 3_200 },
+      { ...base, STDR_YYQU_CD: "20244", TOT_HSHLD_CO: 3_150 },
+    ]);
+    expect(result.quarter).toBe("20252");
+    expect(result.rows).toEqual([{ ...base, STDR_YYQU_CD: "20252", TOT_HSHLD_CO: 3_200 }]);
   });
 
   it("uses the latest contract month and monthly-rent median", () => {

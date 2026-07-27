@@ -74,10 +74,12 @@ export const commercialStoreAdapter: SourceAdapter = {
       series: [],
     };
     return {
-      sourceCode: this.code, status: "success", recordsRead: data.rows.length, recordsSaved: 3, recordsSkipped: data.rows.length - rows.length,
+      sourceCode: this.code, status: "success", recordsRead: data.rows.length, recordsSaved: 5, recordsSkipped: data.rows.length - rows.length,
       indicators: [
         { ...common, code: "store_count", name: "전체 점포 수", value: summary.storeCount, unit: "개", statusMessage: null, proxyDescription: "업종별 전체 점포 수 합계이며 상권의 질이나 주민 만족도를 직접 뜻하지 않습니다.", spatialComparison: comparisonData("개", (item) => item.storeCount) },
+        { ...common, code: "opening_count", name: "개업 점포 수", value: summary.openedCount, unit: "개", statusMessage: null, favorableDirection: "HIGHER_IS_BETTER" as const, proxyDescription: "해당 분기 업종별 개업 점포 수의 합계이며 개별 점포의 생존 여부를 뜻하지 않습니다.", spatialComparison: comparisonData("개", (item) => item.openedCount) },
         { ...common, code: "opening_rate", name: "개업률", value: summary.openingRate, unit: "%", statusMessage: `공식 업종별 개업점포 수 ${summary.openedCount}개를 전체 점포 ${summary.storeCount}개로 나눈 가중 집계값입니다.`, proxyDescription: "업종별 공식 개업률을 단순평균하지 않고 개업점포 수와 전체 점포 수로 집계한 상권 진입 보조지표입니다.", spatialComparison: comparisonData("%", (item) => item.openingRate) },
+        { ...common, code: "closing_count", name: "폐업 점포 수", value: summary.closedCount, unit: "개", statusMessage: null, favorableDirection: "LOWER_IS_BETTER" as const, proxyDescription: "해당 분기 업종별 폐업 점포 수의 합계이며 폐업 사유나 상권 쇠퇴를 직접 뜻하지 않습니다.", spatialComparison: comparisonData("개", (item) => item.closedCount) },
         { ...common, code: "closing_rate", name: "폐업률", value: summary.closingRate, unit: "%", statusMessage: `공식 업종별 폐업점포 수 ${summary.closedCount}개를 전체 점포 ${summary.storeCount}개로 나눈 가중 집계값입니다.`, proxyDescription: "업종별 공식 폐업률을 단순평균하지 않고 폐업점포 수와 전체 점포 수로 집계한 상권 이탈 보조지표입니다.", spatialComparison: comparisonData("%", (item) => item.closingRate) },
       ],
       rawPayloads: data.payloads,
