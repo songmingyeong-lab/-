@@ -34,4 +34,15 @@ describe("Dashboard areas", () => {
     expect(screen.getByText("월평균 소득")).toBeInTheDocument();
     expect(screen.getByText("주거 월세 중위값")).toBeInTheDocument();
   });
+
+  it("keeps only the official street floating population indicator", () => {
+    render(<Dashboard data={getMockDashboardData()} />);
+    expect(screen.getByRole("heading", { name: "길 단위 유동인구" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "주거인구" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "직장인구" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "일평균 생활인구" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "시간대별 유동인구 집중도" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "길 단위 유동인구 합계" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "요일별 길 단위 유동인구" })).not.toBeInTheDocument();
+  });
 });

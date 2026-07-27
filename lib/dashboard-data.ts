@@ -56,7 +56,6 @@ function attachScores(
 function modernizeFixtureIndicators(indicators: DashboardIndicator[]) {
   const store = indicators.find((item) => item.code === "store_count")!;
   const floating = indicators.find((item) => item.code === "floating_population")!;
-  const peak = indicators.find((item) => item.code === "peak_floating_time_band")!;
   const missing = (
     base: DashboardIndicator,
     code: string,
@@ -67,9 +66,8 @@ function modernizeFixtureIndicators(indicators: DashboardIndicator[]) {
   ): DashboardIndicator => ({
     ...base, code, name, value: null, previousValue: null, unit, status, statusMessage, series: [], spatialComparison: undefined,
   });
-  const concentration = floating.value && peak.value ? (peak.value / floating.value) * 100 : null;
   return [
-    ...indicators.filter((item) => !["floating_population", "peak_floating_time_band"].includes(item.code)),
+    ...indicators.filter((item) => !["living_population", "floating_population", "peak_floating_time_band"].includes(item.code)),
     missing(store, "store_density", "1,000가구당 점포 수", "개/1,000가구", "확인 스냅샷에는 같은 분기의 가구 수가 없어 점포 밀도 대체값을 계산하지 않았습니다."),
     missing(store, "opening_count", "개업 점포 수", "개", "확인 스냅샷에 개업 점포 수 원자료가 없습니다."),
     missing(store, "closing_count", "폐업 점포 수", "개", "확인 스냅샷에 폐업 점포 수 원자료가 없습니다."),
@@ -78,16 +76,27 @@ function modernizeFixtureIndicators(indicators: DashboardIndicator[]) {
     missing(store, "household_count", "가구 수", "가구", "확인 스냅샷에 같은 기준분기의 가구 수가 없습니다."),
     missing(store, "rental_burden", "임대료 부담", "%", "행정동 상가 임대시세와 호환 가능한 매출 자료가 모두 필요합니다."),
     missing(store, "rent_level", "상가 환산임대료", "원/3.3㎡·월", "확인 스냅샷에는 조건검색 임대시세가 없습니다. live 모드에서 최신 조건검색 값을 수집합니다."),
-    {
-      ...floating, code: "street_floating_population_density", name: "길 단위 유동인구 밀도", unit: "명(합계 대체)",
-      statusMessage: "도로길이·면적 분모가 없어 전체 길 단위 유동인구 합계를 대체점수로 표시한 확인 스냅샷입니다.",
-    },
-    {
-      ...peak, code: "floating_population_concentration", name: "시간대별 유동인구 집중도", value: concentration, unit: "%",
-      statusMessage: "최대 시간대 유동인구를 전체 길 단위 유동인구로 나눈 확인용 대체 스냅샷입니다.",
-    },
-    { ...floating, code: "street_floating_population_total", name: "길 단위 유동인구 합계", favorableDirection: "NEUTRAL" as const },
-    missing(floating, "floating_population_by_weekday", "요일별 길 단위 유동인구", "명", "확인 스냅샷에 요일별 원자료가 없습니다."),
+    missing(
+      floating,
+      "street_floating_population_density",
+      "길 단위 유동인구",
+      "명/ha",
+      "확인 스냅샷의 기존 유동인구는 공식 1ha당 값과 단위가 달라 재사용하지 않습니다. live 모드에서 서울시 상권분석서비스 조건검색 값을 수집합니다.",
+    ),
+    missing(
+      floating,
+      "residential_population_density",
+      "주거인구",
+      "명/ha",
+      "확인 스냅샷에 공식 1ha당 주거인구가 없습니다. live 모드에서 서울시 상권분석서비스 조건검색 값을 수집합니다.",
+    ),
+    missing(
+      floating,
+      "workplace_population_density",
+      "직장인구",
+      "명/ha",
+      "확인 스냅샷에 공식 1ha당 직장인구가 없습니다. live 모드에서 서울시 상권분석서비스 조건검색 값을 수집합니다.",
+    ),
   ];
 }
 

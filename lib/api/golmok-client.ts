@@ -24,9 +24,10 @@ async function postForm(path: string, body: Record<string, string>) {
 
 export async function fetchGolmokConditionRows<T>(
   endpoint: string,
-  category: "income" | "rent",
+  category: "income" | "rent" | "opening" | "population",
   districtCode: string,
   rowSchema: z.ZodType<T>,
+  options: { svcIndutyCdL?: string; svcIndutyCdM?: string } = {},
 ) {
   const yearsPayload = await postForm("/region/selectYearData.json", {});
   const years = yearSchema.parse(yearsPayload);
@@ -38,8 +39,8 @@ export async function fetchGolmokConditionRows<T>(
     stdrQuCd: latest.QU,
     stdrMnCd: "",
     selectTerm: "quarter",
-    svcIndutyCdL: "",
-    svcIndutyCdM: "",
+    svcIndutyCdL: options.svcIndutyCdL ?? "",
+    svcIndutyCdM: options.svcIndutyCdM ?? "",
     stdrSigngu: districtCode,
     selectInduty: "1",
     infoCategory: category,

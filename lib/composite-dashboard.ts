@@ -1,5 +1,5 @@
 import type { TargetArea } from "@/lib/areas";
-import type { DashboardData, DashboardIndicator, DataStatus, SeriesPoint } from "@/lib/indicators/types";
+import type { DashboardData, DashboardIndicator, DataStatus } from "@/lib/indicators/types";
 
 const COMPOSITE_NOTE = "창신1·2·3동 및 숭인1동 통합 집계 · 행정동 집계 대체지표";
 const SUM_CODES = new Set([
@@ -7,9 +7,6 @@ const SUM_CODES = new Set([
   "opening_count",
   "closing_count",
   "household_count",
-  "living_population",
-  "street_floating_population_density",
-  "street_floating_population_total",
 ]);
 const DISTRICT_PROXY_CODES = new Set(["noise_vibration_complaint_count", "resident_program_count"]);
 
@@ -22,21 +19,6 @@ function valuesFor(code: string, members: DashboardData[]) {
 function sumFor(code: string, members: DashboardData[]) {
   const values = valuesFor(code, members);
   return values.length === members.length ? values.reduce((sum, value) => sum + value, 0) : null;
-}
-
-function mergedSeries(code: string, members: DashboardData[]) {
-  const series = members.map((member) => member.indicators.find((indicator) => indicator.code === code)?.series ?? []);
-  const labels = [...new Set(series.flatMap((points) => points.map((point) => point.date)))];
-  return labels.map((date) => {
-    const values = series.map((points) => points.find((point) => point.date === date)?.value ?? null);
-    return { date, value: values.every((value): value is number => value !== null) ? values.reduce((sum, value) => sum + value, 0) : null };
-  });
-}
-
-function concentrationFromSeries(series: SeriesPoint[]) {
-  const values = series.map((point) => point.value).filter((value): value is number => value !== null);
-  const total = values.reduce((sum, value) => sum + value, 0);
-  return values.length > 0 && total > 0 ? (Math.max(...values) / total) * 100 : null;
 }
 
 function comparisonFor(indicator: DashboardIndicator, area: TargetArea) {
@@ -58,7 +40,7 @@ function comparisonFor(indicator: DashboardIndicator, area: TargetArea) {
   };
 }
 
-function aggregateValue(code: string, members: DashboardData[], series: SeriesPoint[]) {
+function aggregateValue(code: string, members: DashboardData[]) {
   if (SUM_CODES.has(code)) return sumFor(code, members);
   if (code === "store_density") {
     const stores = sumFor("store_count", members);
@@ -70,7 +52,10 @@ function aggregateValue(code: string, members: DashboardData[], series: SeriesPo
     const stores = sumFor("store_count", members);
     return count !== null && stores && stores > 0 ? (count / stores) * 100 : null;
   }
-  if (code === "floating_population_concentration") return concentrationFromSeries(series);
+  if (["street_floating_population_density", "residential_population_density", "workplace_population_density"].includes(code)) {
+    const values = valuesFor(code, members);
+    return values.length === members.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+  }
   if (code === "estimated_sales") {
     const stores = members.map((member) => member.indicators.find((item) => item.code === "store_count")?.value ?? null);
     const sales = members.map((member) => member.indicators.find((item) => item.code === code)?.value ?? null);
@@ -129,10 +114,8 @@ function aggregateValue(code: string, members: DashboardData[], series: SeriesPo
 export function aggregateCompositeDashboard(members: DashboardData[], area: TargetArea) {
   const template = members[0];
   const indicators = template.indicators.map((base) => {
-    const series = ["floating_population_concentration", "street_floating_population_total", "street_floating_population_density", "floating_population_by_weekday"].includes(base.code)
-      ? mergedSeries(base.code, members)
-      : [];
-    const value = aggregateValue(base.code, members, series);
+    const series: DashboardIndicator["series"] = [];
+    const value = aggregateValue(base.code, members);
     const supported = value !== null || DISTRICT_PROXY_CODES.has(base.code);
     const indicator: DashboardIndicator = {
       ...base,
@@ -140,7 +123,9 @@ export function aggregateCompositeDashboard(members: DashboardData[], area: Targ
       previousValue: null,
       status: supported ? "success" : base.status === "restricted_data" ? "restricted_data" : "empty",
       statusMessage: supported
-        ? `${base.statusMessage ? `${base.statusMessage} ` : ""}${COMPOSITE_NOTE}`
+        ? ["street_floating_population_density", "residential_population_density", "workplace_population_density"].includes(base.code)
+          ? `4개 행정동의 1ha당 ${base.name} 산술평균입니다. 면적가중 통합값이 아닙니다. ${COMPOSITE_NOTE}`
+          : `${base.statusMessage ? `${base.statusMessage} ` : ""}${COMPOSITE_NOTE}`
         : `${COMPOSITE_NOTE}. 네 행정동 원자료의 분모 또는 동일 기준 집계근거가 없어 통합값을 임의 산출하지 않았습니다.`,
       geographicUnit: COMPOSITE_NOTE,
       series,

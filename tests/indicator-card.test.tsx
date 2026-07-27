@@ -8,10 +8,10 @@ vi.mock("@/components/charts/indicator-chart", () => ({ IndicatorChart: () => <d
 
 describe("IndicatorCard", () => {
   it("labels the verified snapshot and shows its source", () => {
-    const indicator = getMockDashboardData().indicators.find((item) => item.code === "living_population")!;
+    const indicator = getMockDashboardData().indicators.find((item) => item.code === "aged_building_ratio")!;
     render(<IndicatorCard indicator={indicator} />);
     expect(screen.getByText("공식자료 확인값")).toBeInTheDocument();
-    expect(screen.getByText(/출처: 행정동 단위 서울 생활인구/)).toBeInTheDocument();
+    expect(screen.getByText(/출처: 서울시 건축물대장 총괄표제부/)).toBeInTheDocument();
   });
   it("shows insufficient source instead of zero", () => {
     const indicator = getMockDashboardData().indicators.find((item) => item.code === "vacant_house_count")!;
@@ -31,10 +31,10 @@ describe("IndicatorCard", () => {
     expect(screen.getByText(/자료원이 정상 응답했지만/)).toBeInTheDocument();
   });
   it("shows collection date and update cycle separately from the base date", () => {
-    const indicator = getMockDashboardData().indicators.find((item) => item.code === "living_population")!;
+    const indicator = getMockDashboardData().indicators.find((item) => item.code === "aged_building_ratio")!;
     render(<IndicatorCard indicator={indicator} />);
     expect(screen.getByText(/수집 2026\. 7\. 18\./)).toBeInTheDocument();
-    expect(screen.getByText(/매일/)).toBeInTheDocument();
+    expect(screen.getByText(/매일 1회/)).toBeInTheDocument();
   });
   it("renders the spatial comparison scope label", () => {
     const source = getMockDashboardData().indicators.find((item) => item.code === "store_count")!;
