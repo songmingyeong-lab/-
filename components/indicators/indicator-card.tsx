@@ -59,11 +59,13 @@ export function IndicatorCard({ indicator, score }: { indicator: DashboardIndica
       {indicator.value !== null && indicator.previousValue !== null && <p className="score-interpretation">이전 분기 대비 {indicator.previousValue === 0 ? "비교 불가" : `${((indicator.value - indicator.previousValue) / Math.abs(indicator.previousValue) * 100).toFixed(1)}%`}</p>}
       {score && <section className="indicator-score" aria-label={`${indicator.name} 공공데이터 기반 지표점수`}>
         <div className="indicator-score-head"><span>공공데이터 기반 지표점수</span><strong>{score.score === null ? "산출 불가" : `${score.score.toFixed(1)} / 5.0`}</strong></div>
-        <p className="score-interpretation">점수 상태: {score.scoreStatus === "CALCULATED" ? "산출 완료" : score.scoreStatus === "INFORMATION_ONLY" ? "정보 제공용" : "산출 불가"} · 공간비교 점수 · {score.interpretation}</p>
+        <p className="score-interpretation">점수 상태: {score.scoreStatus === "CALCULATED" ? "산출 완료" : score.scoreStatus === "LIMITED_DATA" ? "제한적 비교" : score.scoreStatus === "INFORMATION_ONLY" ? "정보 제공용" : "산출 불가"} · 공간비교 점수 · {score.interpretation}</p>
         {score.scoreReason && <p className="score-reason"><strong>{score.score === null ? "이유" : "산출 주의"}:</strong> {score.scoreReason}</p>}
         <dl className="score-comparison-grid">
           <div><dt>대상</dt><dd>{score.targetAreaName}<small>{formatScoreValue(score.targetValue, score.unit)}</small></dd></div>
           <div><dt>비교평균</dt><dd>{formatScoreValue(score.comparisonMean, score.unit)}<small>{score.comparisonAreaDescription}</small></dd></div>
+          <div><dt>비교중앙값</dt><dd>{formatScoreValue(score.comparisonMedian, score.unit)}</dd></div>
+          {score.percentileRank !== null && score.percentileRank !== undefined && <div><dt>자치구 내 값 백분위</dt><dd>{score.percentileRank.toFixed(1)}%</dd></div>}
           <div><dt>평균 대비</dt><dd>{score.comparisonRate === null ? "산출 불가" : `${score.comparisonRate > 0 ? "+" : ""}${score.comparisonRate.toFixed(1)}%`}</dd></div>
           <div><dt>비교 대상 수</dt><dd>{score.comparisonCount}개<small>최소 {score.minimumComparisonCount}개</small></dd></div>
           <div><dt>비교범위</dt><dd>{score.comparisonAreaDescription}</dd></div>

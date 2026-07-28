@@ -36,17 +36,24 @@ describe("대시보드 공간비교 점수 조정", () => {
     expect(scores.find((score) => score.indicatorCode === "noise_vibration_complaint_count")).toMatchObject({ score: 3, scoreStatus: "CALCULATED" });
   });
 
-  it("GURO_DONG 비교군이 최소 5개면 지표점수를 계산한다", () => {
+  it("GURO_DONG 비교군이 5~9개면 제한적 비교점수를 계산한다", () => {
     const categories = calculateDashboardScores([storeIndicator(5)], codes, "2026-07-19T00:00:00Z");
     const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_density")!;
-    expect(score).toMatchObject({ score: 2, scoreStatus: "CALCULATED", comparisonCount: 5, comparisonMean: 100, comparisonRate: 20 });
+    expect(score).toMatchObject({ score: 2, scoreStatus: "LIMITED_DATA", comparisonQuality: "low", comparisonCount: 5, comparisonMean: 100, comparisonRate: 20 });
+    expect(score.scoreReason).toContain("제한적 비교값");
+  });
+
+  it("GURO_DONG 비교군이 10개 이상이면 정상 비교점수를 계산한다", () => {
+    const categories = calculateDashboardScores([storeIndicator(10)], codes);
+    const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_density")!;
+    expect(score).toMatchObject({ score: 2, scoreStatus: "CALCULATED", comparisonQuality: "normal", comparisonCount: 10 });
   });
 
   it("GURO_DONG 비교군이 5개 미만이면 점수를 보류한다", () => {
     const categories = calculateDashboardScores([storeIndicator(4)], codes);
     const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_density")!;
     expect(score).toMatchObject({ score: null, scoreStatus: "NOT_CALCULABLE", comparisonCount: 4 });
-    expect(score.scoreReason).toContain("최소 5개");
+    expect(score.scoreReason).toContain("상대점수를 산정하지 않았습니다");
   });
 
   it("SEOUL_DISTRICT 기본 최소 표본은 10개로 설정한다", () => {

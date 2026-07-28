@@ -5,5 +5,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ are
   const { areaSlug } = await params;
   if (!getTargetArea(areaSlug)) return Response.json({ status: "empty", data: [] }, { status: 404 });
   const data = await getDashboardData(areaSlug);
-  return Response.json({ status: data.status, data: data.indicators });
+  return Response.json({
+    status: data.status,
+    data: data.indicators,
+    comparisonAvailability: data.comparisonAvailability,
+    scoreStatus: data.comparisonAvailability.quality === "insufficient"
+      ? "insufficient_comparison_group"
+      : data.comparisonAvailability.quality === "low"
+        ? "limited_comparison"
+        : "calculated",
+  });
 }

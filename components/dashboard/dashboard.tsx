@@ -4,6 +4,7 @@ import { INDICATOR_AREA_ORDER } from "@/lib/indicators/types";
 import type { DashboardData, DataStatus } from "@/lib/indicators/types";
 import { AreaSelector } from "@/components/dashboard/area-selector";
 import { EconomicContextCard } from "@/components/dashboard/economic-context-card";
+import { CommercialComparisonCard } from "@/components/dashboard/commercial-comparison-card";
 
 const ECONOMIC_CONTEXT_CODES = new Set(["monthly_average_income", "income_level", "median_monthly_rent", "rent_level"]);
 const HIDDEN_DETAIL_CODES = new Set([
@@ -69,6 +70,7 @@ export function Dashboard({ data, areas = [] }: { data: DashboardData; areas?: A
               <div className="area-heading"><span>{index + 1}</span><h3 id={`area-${index}`}>{area}</h3></div>
               {area === "생활 불편" && <p className="area-scope-notice">도로공사는 동 명칭 기반 대체비교, 민원은 {data.area.districtName} 단위 임시점수를 사용합니다. 엄격 비교가 아닌 점수에는 산출 주의를 표시합니다.</p>}
               {area === "공동체·거점" && <p className="area-scope-notice">프로그램은 {data.area.districtName}와 서울시 다른 자치구의 공개예약 총수를, 거점시설은 {data.area.districtName} 법정동별 동일 용도분류 수를 대체 비교합니다.</p>}
+              {area === "상권 변화" && <CommercialComparisonCard availability={data.comparisonAvailability} storeIndicator={data.indicators.find((indicator) => indicator.code === "store_count")} />}
               {categoryScore && <CategoryScoreSummary result={categoryScore} />}
               {indicators.length > 0 ? <div className="card-grid">{indicators.map((indicator) => <IndicatorCard key={indicator.code} indicator={indicator} score={categoryScore?.indicatorScores.find((result) => result.indicatorCode === indicator.code)} />)}</div> : <div className="area-empty">연결된 지표가 없습니다. 공식 자료원과 공간단위를 확인 중입니다.</div>}
             </section>;

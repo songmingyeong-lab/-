@@ -7,6 +7,28 @@ export type ScoreStatus = "CALCULATED" | "LIMITED_DATA" | "NOT_CALCULABLE" | "IN
 export type SpatialGeographicUnit = "ADMINISTRATIVE_DONG" | "LEGAL_DONG" | "DISTRICT";
 export type NormalizationMethod = "NONE" | "PER_10000_RESIDENTS" | "PER_STORE";
 export type DenominatorType = "NONE" | "REGISTERED_POPULATION" | "STORE_COUNT";
+export type ComparisonQuality = "normal" | "low" | "insufficient";
+
+export interface ComparisonAvailability {
+  available: boolean;
+  districtName: string;
+  collectedDongCount: number;
+  usableDongCount: number;
+  minimumRequired: 5;
+  quality: ComparisonQuality;
+  scopeLabel: "수집된 행정동 기준";
+  basePeriod: string | null;
+  comparisonMean: number | null;
+  comparisonMedian: number | null;
+  percentileRank: number | null;
+  referenceScore: number | null;
+  previousQuarterChangeRate: number | null;
+  yearOverYearChangeRate: number | null;
+  recentFourQuarterAverage: number | null;
+  recentFourQuarterChangeRate: number | null;
+  fallbackMode: "district_comparison" | "year_over_year" | "recent_four_quarter_average" | "raw_only";
+  message: string;
+}
 
 export interface ScoreThresholds {
   directionalNeutralPercent: number;
@@ -76,6 +98,8 @@ export interface IndicatorScoreResult {
   interpretation: string;
   dataSource: string;
   calculatedAt: string;
+  comparisonQuality?: ComparisonQuality;
+  percentileRank?: number | null;
 }
 
 export interface CategoryScoreResult {

@@ -21,8 +21,20 @@ describe("internal API", () => {
     expect(body.data.statusMessage).toContain("창신1동");
   });
   it("returns an indicator and its chart points", async () => {
-    const indicatorResponse = await getIndicator(new Request("http://local.test"), { params: Promise.resolve({ areaSlug: "garibong", indicatorCode: "street_floating_population_density" }) });
-    expect((await indicatorResponse.json()).data.code).toBe("street_floating_population_density");
+    const indicatorResponse = await getIndicator(new Request("http://local.test"), { params: Promise.resolve({ areaSlug: "garibong", indicatorCode: "store_count" }) });
+    const indicatorBody = await indicatorResponse.json();
+    expect(indicatorBody.data.code).toBe("store_count");
+    expect(indicatorBody).toMatchObject({
+      comparisonAvailability: {
+        available: false,
+        districtName: "구로구",
+        usableDongCount: 0,
+        minimumRequired: 5,
+        quality: "insufficient",
+        scopeLabel: "수집된 행정동 기준",
+      },
+      scoreStatus: "insufficient_comparison_group",
+    });
     const chartResponse = await getChart(new Request("http://local.test"), { params: Promise.resolve({ areaSlug: "garibong", chartCode: "street_floating_population_density" }) });
     const chart = await chartResponse.json();
     expect(chart.data.points).toEqual([]);

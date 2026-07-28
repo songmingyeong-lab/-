@@ -2,6 +2,7 @@ import fixture from "@/data/fixtures/dashboard.json";
 import { DEFAULT_AREA_SLUG, resolveTargetArea } from "@/lib/areas";
 import type { DashboardData, DashboardIndicator, DataStatus, IndicatorArea } from "@/lib/indicators/types";
 import { calculateDashboardScores } from "@/lib/scoring/dashboard-scores";
+import { evaluateDistrictComparison } from "@/lib/scoring/comparison-availability";
 import { SCORING_NOTICE, SCORING_VERSION } from "@/lib/scoring/indicator-score-config";
 import { aggregateCompositeDashboard } from "@/lib/composite-dashboard";
 
@@ -36,12 +37,17 @@ function configuredArea(slug?: string | null): DashboardData["area"] {
 }
 
 function attachScores(
-  data: Omit<DashboardData, "categoryScores" | "scoringVersion" | "scoringNotice">,
+  data: Omit<DashboardData, "comparisonAvailability" | "categoryScores" | "scoringVersion" | "scoringNotice">,
 ): DashboardData {
   const targetDongCode = data.area.administrativeDongCode;
   const targetDistrictCode = targetDongCode?.slice(0, 5) ?? null;
   return {
     ...data,
+    comparisonAvailability: evaluateDistrictComparison(
+      data.indicators.find((indicator) => indicator.code === "store_count"),
+      data.area.districtName,
+      targetDistrictCode,
+    ),
     categoryScores: calculateDashboardScores(data.indicators, {
       targetDongCode,
       targetDistrictCode,

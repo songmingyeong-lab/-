@@ -55,17 +55,18 @@ export function calculateIndicatorScore(rate: number, direction: SpatialScoringD
 
 export function calculateDataCoverage(scores: IndicatorScoreResult[]) {
   const totalWeight = scores.reduce((sum, result) => sum + result.weight, 0);
-  const availableWeight = scores.reduce((sum, result) => sum + (result.scoreStatus === "CALCULATED" ? result.weight : 0), 0);
+  const availableWeight = scores.reduce((sum, result) => sum + (["CALCULATED", "LIMITED_DATA"].includes(result.scoreStatus) ? result.weight : 0), 0);
   return totalWeight === 0 ? 0 : (availableWeight / totalWeight) * 100;
 }
 
 export function calculateCategoryScore(scores: IndicatorScoreResult[]) {
   const dataCoverage = calculateDataCoverage(scores);
-  const available = scores.filter((result) => result.scoreStatus === "CALCULATED" && result.score !== null);
+  const available = scores.filter((result) => ["CALCULATED", "LIMITED_DATA"].includes(result.scoreStatus) && result.score !== null);
   const availableWeight = available.reduce((sum, result) => sum + result.weight, 0);
   const weighted = availableWeight === 0 ? null : available.reduce((sum, result) => sum + (result.score as number) * result.weight, 0) / availableWeight;
   const score = weighted === null || dataCoverage < 50 ? null : Math.round(weighted * 10) / 10;
-  const scoreStatus: ScoreStatus = score === null ? "NOT_CALCULABLE" : dataCoverage < 70 ? "LIMITED_DATA" : "CALCULATED";
+  const hasLimitedComparison = available.some((result) => result.scoreStatus === "LIMITED_DATA");
+  const scoreStatus: ScoreStatus = score === null ? "NOT_CALCULABLE" : dataCoverage < 70 || hasLimitedComparison ? "LIMITED_DATA" : "CALCULATED";
   return { score, scoreStatus, dataCoverage: Math.round(dataCoverage * 10) / 10 };
 }
 
@@ -78,4 +79,3 @@ export function formatScoreInterpretation(score: number | null, direction?: Spat
   if (score >= 1.5) return "비교집단보다 다소 불리한 수준";
   return "비교집단보다 불리한 수준";
 }
-

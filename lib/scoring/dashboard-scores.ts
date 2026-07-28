@@ -72,8 +72,18 @@ export function calculateDashboardScores(indicators: DashboardIndicator[], offic
       const comparisonMedian = calculateMedian(group.comparisons.map((value) => value.value));
       const comparisonValue = config.comparisonMethod === "MEAN" ? comparisonMean : comparisonMedian;
       if (group.comparisons.length === 0 && config.allowProvisionalScore) return provisionalResult(indicator, config, calculatedAt, officialCodes);
-      if (group.comparisons.length < config.minimumComparisonCount && (!config.allowRelaxedMinimum || group.comparisons.length === 0)) return {
-        ...emptyResult(indicator, config, calculatedAt, `유효 비교 대상이 ${group.comparisons.length}개로 최소 ${config.minimumComparisonCount}개보다 적습니다.`, officialCodes),
+      const districtDongComparison = config.comparisonScope === "GURO_DONG";
+      const insufficientDistrictComparison = districtDongComparison && group.comparisons.length < 5;
+      if (insufficientDistrictComparison || (group.comparisons.length < config.minimumComparisonCount && (!config.allowRelaxedMinimum || group.comparisons.length === 0))) return {
+        ...emptyResult(
+          indicator,
+          config,
+          calculatedAt,
+          insufficientDistrictComparison
+            ? "같은 자치구 내 비교 가능한 행정동 데이터가 부족해 상대점수를 산정하지 않았습니다."
+            : `유효 비교 대상이 ${group.comparisons.length}개로 최소 ${config.minimumComparisonCount}개보다 적습니다.`,
+          officialCodes,
+        ),
         targetGeographicUnit: group.target.geographicUnit,
         comparisonGeographicUnit: group.target.geographicUnit,
         targetAreaName: group.target.areaName,
@@ -84,6 +94,7 @@ export function calculateDashboardScores(indicators: DashboardIndicator[], offic
         comparisonCount: group.comparisons.length,
         unit: group.target.unit,
         basePeriod: group.target.basePeriod,
+        comparisonQuality: "insufficient",
       };
       const comparisonRate = calculateComparisonRate(group.target.value, comparisonValue);
       if (group.target.value === null || comparisonValue === null || comparisonRate === null) return emptyResult(indicator, config, calculatedAt, "대상값 또는 비교값이 없어 비교율을 계산할 수 없습니다.", officialCodes);
@@ -91,19 +102,35 @@ export function calculateDashboardScores(indicators: DashboardIndicator[], offic
       if (score === null) return emptyResult(indicator, config, calculatedAt, "정보 제공용 지표입니다.", officialCodes, true);
       const relaxedSource = group.target.geographicUnit === "LEGAL_DONG" || group.comparisons.some((value) => value.areaCode.startsWith("NAME:") || value.areaCode.startsWith("LEGAL:"));
       const relaxedSample = group.comparisons.length < config.minimumComparisonCount;
-      const comparisonAreaDescription = relaxedSource
+      const limitedDistrictComparison = districtDongComparison && group.comparisons.length < 10;
+      const comparisonAreaDescription = limitedDistrictComparison
+        ? `${officialCodes.targetDistrictName ?? "같은 자치구"} 수집된 행정동 기준 (자치구 전체 아님)`
+        : relaxedSource
         ? `${formatComparisonScope(config.comparisonScope, officialCodes.targetDongName, officialCodes.targetDistrictName)} (명칭·법정동 기반 대체비교)`
         : formatComparisonScope(config.comparisonScope, officialCodes.targetDongName, officialCodes.targetDistrictName);
+      const allValues = [group.target.value, ...group.comparisons.map((value) => value.value)].filter((value): value is number => value !== null);
+      const percentileRank = allValues.length > 0
+        ? ((allValues.filter((value) => value < group.target.value!).length
+          + allValues.filter((value) => value === group.target.value).length * 0.5) / allValues.length) * 100
+        : null;
       return {
         indicatorCode: indicator.code, indicatorName: indicator.name, category: config.category, comparisonScope: config.comparisonScope,
         targetGeographicUnit: group.target.geographicUnit, comparisonGeographicUnit: group.target.geographicUnit,
         targetAreaName: group.target.areaName, comparisonAreaDescription,
-        score, scoreStatus: "CALCULATED", scoreReason: relaxedSource || relaxedSample ? `엄격 비교 조건을 완화한 참고점수입니다.${relaxedSample ? ` 비교 대상은 권장 최소 ${config.minimumComparisonCount}개보다 적은 ${group.comparisons.length}개입니다.` : ""}` : null, direction: config.direction,
+        score,
+        scoreStatus: limitedDistrictComparison ? "LIMITED_DATA" : "CALCULATED",
+        scoreReason: limitedDistrictComparison
+          ? "현재 수집된 일부 행정동만을 기준으로 계산한 제한적 비교값입니다."
+          : relaxedSource || relaxedSample ? `엄격 비교 조건을 완화한 참고점수입니다.${relaxedSample ? ` 비교 대상은 권장 최소 ${config.minimumComparisonCount}개보다 적은 ${group.comparisons.length}개입니다.` : ""}` : null,
+        direction: config.direction,
         targetValue: group.target.value, comparisonValue, comparisonMean, comparisonMedian, comparisonMethod: config.comparisonMethod,
         comparisonRate, difference: group.target.value - comparisonValue, comparisonCount: group.comparisons.length,
         minimumComparisonCount: config.minimumComparisonCount, unit: group.target.unit, baseDate: indicator.baseDate,
         basePeriod: group.target.basePeriod, weight: config.weight, interpretation: formatScoreInterpretation(score, config.direction),
-        dataSource: indicator.source, calculatedAt,
+        dataSource: indicator.source,
+        calculatedAt,
+        comparisonQuality: limitedDistrictComparison ? "low" : districtDongComparison ? "normal" : undefined,
+        percentileRank,
       };
     } catch (error) {
       return emptyResult(indicator, config, calculatedAt, error instanceof Error ? error.message : "공간 비교 설정 오류", officialCodes);
@@ -111,6 +138,6 @@ export function calculateDashboardScores(indicators: DashboardIndicator[], offic
   });
   return INDICATOR_AREA_ORDER.map((category) => {
     const indicatorScores = results.filter((result) => result.category === category);
-    return { category, categoryName: category, ...calculateCategoryScore(indicatorScores), availableIndicatorCount: indicatorScores.filter((result) => result.scoreStatus === "CALCULATED").length, totalIndicatorCount: indicatorScores.length, indicatorScores, calculatedAt };
+    return { category, categoryName: category, ...calculateCategoryScore(indicatorScores), availableIndicatorCount: indicatorScores.filter((result) => ["CALCULATED", "LIMITED_DATA"].includes(result.scoreStatus)).length, totalIndicatorCount: indicatorScores.length, indicatorScores, calculatedAt };
   });
 }

@@ -1,4 +1,4 @@
-import type { CategoryScoreResult, SpatialComparisonData } from "@/lib/scoring/types";
+import type { CategoryScoreResult, ComparisonAvailability, SpatialComparisonData } from "@/lib/scoring/types";
 
 export const INDICATOR_AREA_ORDER = ["주거환경", "생활 불편", "상권 변화", "활력·혼잡", "공동체·거점"] as const;
 export type IndicatorArea = (typeof INDICATOR_AREA_ORDER)[number];
@@ -47,6 +47,7 @@ export interface DashboardData {
   lastCollectedAt: string | null;
   status: DataStatus;
   indicators: DashboardIndicator[];
+  comparisonAvailability: ComparisonAvailability;
   categoryScores: CategoryScoreResult[];
   scoringVersion: string;
   scoringNotice: string;
