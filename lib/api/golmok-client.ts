@@ -24,7 +24,7 @@ async function postForm(path: string, body: Record<string, string>) {
 
 export async function fetchGolmokConditionRows<T>(
   endpoint: string,
-  category: "income" | "rent" | "opening" | "population",
+  category: "income" | "rent" | "opening" | "population" | "store",
   districtCode: string,
   rowSchema: z.ZodType<T>,
   options: { svcIndutyCdL?: string; svcIndutyCdM?: string } = {},

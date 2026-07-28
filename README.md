@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | 일평균 생활인구 | 행정동 단위 서울 생활인구(내국인) | 행정동 | 매일 | daily |
 | 30년 이상 노후건축물 비율 | 서울시 건축물대장 총괄표제부 | 법정동 계열 | 매일 | monthly, 현재 비활성 |
-| 전체 점포 수 | 상권분석서비스(점포-행정동) | 행정동 | 분기 | quarterly |
+| 점포 수 | 서울시 상권분석서비스 지역별 현황(조건검색) | 행정동 | 분기 | quarterly |
 | 총·시간대별 유동인구 | 상권분석서비스(길단위인구-행정동) | 행정동 | 분기 | quarterly |
 
 노후건축물은 총괄표제부만으로 전체 건축물을 대표할 수 있는지 검증이 끝나지 않았으므로 값을 만들지 않고 `자료원 검증 불충분`으로 표시합니다.
@@ -109,7 +109,7 @@ npm.cmd run build
 ## 데이터 출처
 
 - [행정동 단위 서울 생활인구(내국인)](https://data.seoul.go.kr/dataList/OA-14991/S/1/datasetView.do)
-- [서울시 상권분석서비스(점포-행정동)](https://data.seoul.go.kr/dataList/OA-22172/S/1/datasetView.do)
+- [서울시 상권분석서비스 지역별 현황(조건검색)](https://golmok.seoul.go.kr/stateArea.do)
 - [서울시 상권분석서비스(길단위인구-행정동)](https://data.seoul.go.kr/dataList/OA-22178/S/1/datasetView.do)
 - [서울시 건축물대장 총괄표제부](https://data.seoul.go.kr/dataList/OA-22423/S/1/datasetView.do)
 - [구로구 가리봉동 도시재생 공식 자료](https://www.guro.go.kr/ceo/downloadContentsFile.do?fileNm=cts1269_file5.pdf)

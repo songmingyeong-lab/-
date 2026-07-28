@@ -26,12 +26,14 @@ describe("Dashboard areas", () => {
     expect(screen.queryByText("전체 종합점수")).not.toBeInTheDocument();
   });
 
-  it("hides internal household and opening/closing counts and moves economic references", () => {
+  it("hides excluded commercial indicators and unavailable economic references", () => {
     render(<Dashboard data={getMockDashboardData()} />);
     expect(screen.queryByRole("heading", { name: "총 가구 수" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "개업 점포 수" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "폐업 점포 수" })).not.toBeInTheDocument();
-    expect(screen.getByText("월평균 소득")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "임대료 부담" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "1,000가구당 점포 수" })).not.toBeInTheDocument();
+    expect(screen.queryByText("월평균 소득")).not.toBeInTheDocument();
     expect(screen.getByText("주거 월세 중위값")).toBeInTheDocument();
   });
 

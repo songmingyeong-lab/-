@@ -7,6 +7,8 @@ const fields = [
   ["rent_level", "상가 환산임대료"],
 ] as const;
 
+type AvailableIndicator = DashboardIndicator & { value: number };
+
 function comparisonMean(indicator?: DashboardIndicator) {
   const values = indicator?.spatialComparison?.candidates
     .map((candidate) => candidate.value)
@@ -14,8 +16,7 @@ function comparisonMean(indicator?: DashboardIndicator) {
   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
 }
 
-function valueLabel(indicator?: DashboardIndicator) {
-  if (!indicator || indicator.value === null) return "자료 없음";
+function valueLabel(indicator: AvailableIndicator) {
   return `${indicator.value.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}${indicator.unit}`;
 }
 
@@ -24,7 +25,8 @@ export function EconomicContextCard({ indicators }: { indicators: DashboardIndic
     code,
     label,
     indicator: indicators.find((item) => item.code === code),
-  }));
+  })).filter((item): item is typeof item & { indicator: AvailableIndicator } => item.indicator?.value !== null && item.indicator !== undefined);
+  if (selected.length === 0) return null;
   const basePeriod = selected.map((item) => item.indicator?.baseDate).find(Boolean) ?? "기준시점 없음";
   return (
     <section className="indicator-area" aria-labelledby="economic-context-title">
@@ -39,7 +41,6 @@ export function EconomicContextCard({ indicators }: { indicators: DashboardIndic
               <dt>{label}</dt>
               <dd>{valueLabel(indicator)}</dd>
               <small>비교지역 평균 {mean === null ? "산출 불가" : `${mean.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}${indicator?.unit ?? ""}`}</small>
-              {indicator?.value === null && <small>원인: {indicator.statusMessage ?? "공개 원자료가 없습니다."}</small>}
             </dl>;
           })}
         </div>

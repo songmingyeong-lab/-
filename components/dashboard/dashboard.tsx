@@ -6,7 +6,13 @@ import { AreaSelector } from "@/components/dashboard/area-selector";
 import { EconomicContextCard } from "@/components/dashboard/economic-context-card";
 
 const ECONOMIC_CONTEXT_CODES = new Set(["monthly_average_income", "income_level", "median_monthly_rent", "rent_level"]);
-const HIDDEN_DETAIL_CODES = new Set(["household_count", "opening_count", "closing_count"]);
+const HIDDEN_DETAIL_CODES = new Set([
+  "household_count",
+  "opening_count",
+  "closing_count",
+  "rental_burden",
+  "store_density",
+]);
 
 const statusLabels: Record<DataStatus, string> = {
   loading: "불러오는 중", success: "수집 완료", empty: "자료 없음", stale: "갱신 필요", error: "수집 실패", mock: "공식자료 확인값", partial_success: "일부 수집",
