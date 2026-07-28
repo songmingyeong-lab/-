@@ -1,10 +1,8 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { getMockDashboardData } from "@/lib/dashboard-data";
 import { INDICATOR_AREA_ORDER } from "@/lib/indicators/types";
-
-vi.mock("@/components/charts/indicator-chart", () => ({ IndicatorChart: () => <div data-testid="chart" /> }));
 
 describe("Dashboard areas", () => {
   it("renders the five fixed areas in the required order", () => {

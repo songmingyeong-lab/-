@@ -78,7 +78,6 @@ h2 { margin: 0; font-size: 22px; letter-spacing: -.025em; }
 .score-comparison-grid small { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; font-weight: 400; }
 .context-score-notice { border-top: 1px solid #d3e0ec; padding-top: 7px; }
 .interpret-good { color: #17613b; }.interpret-bad { color: #9a2c2c; }.interpret-caution { color: #805b00; }.interpret-neutral { color: #526172; }
-.chart-box { height: 150px; width: 100%; }
 .empty-chart { height: 150px; display: grid; place-items: center; background: #f7f8f9; border-radius: 7px; color: var(--muted); font-size: 13px; }
 .proxy { margin: 14px 0 0; font-size: 12px; color: #495867; line-height: 1.55; border-top: 1px solid #edf0f2; padding-top: 12px; }
 .status-message { margin: 12px 0 0; padding: 10px 12px; border-radius: 7px; background: #f4f6f8; color: #526172; font-size: 12px; line-height: 1.5; }

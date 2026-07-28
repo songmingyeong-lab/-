@@ -1,12 +1,16 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { IndicatorCard } from "@/components/indicators/indicator-card";
 import { getMockDashboardData } from "@/lib/dashboard-data";
 import { calculateDashboardScores } from "@/lib/scoring/dashboard-scores";
 
-vi.mock("@/components/charts/indicator-chart", () => ({ IndicatorChart: () => <div data-testid="chart" /> }));
-
 describe("IndicatorCard", () => {
+  it("does not render the visualization chart slot", () => {
+    const indicator = getMockDashboardData().indicators.find((item) => item.code === "store_count")!;
+    render(<IndicatorCard indicator={indicator} />);
+    expect(screen.queryByRole("img", { name: /시계열 차트/ })).not.toBeInTheDocument();
+  });
+
   it("labels the verified snapshot and shows its source", () => {
     const indicator = getMockDashboardData().indicators.find((item) => item.code === "aged_building_ratio")!;
     render(<IndicatorCard indicator={indicator} />);

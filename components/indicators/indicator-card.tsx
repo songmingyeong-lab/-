@@ -1,4 +1,3 @@
-import { IndicatorChart } from "@/components/charts/indicator-chart";
 import type { DashboardIndicator, DataStatus } from "@/lib/indicators/types";
 import type { IndicatorScoreResult, SpatialScoringDirection } from "@/lib/scoring/types";
 
@@ -75,7 +74,6 @@ export function IndicatorCard({ indicator, score }: { indicator: DashboardIndica
         <p className="score-direction">점수 산정식: {scoreFormulaLabels[score.direction]}</p>
         {score.direction === "BALANCED" && <p className="context-score-notice">이 지표는 높고 낮음 자체를 긍정·부정으로 단정하지 않고 같은 자치구 다른 행정동의 일반적 수준에서 벗어난 정도를 평가했습니다.</p>}
       </section>}
-      <IndicatorChart data={indicator.series} unit={indicator.unit} name={indicator.name} />
       {missingReason
         ? <p className="status-message data-gap-reason"><strong>자료가 없는 원인:</strong> {missingReason}</p>
         : indicator.statusMessage && <p className="status-message">{indicator.statusMessage}</p>}
