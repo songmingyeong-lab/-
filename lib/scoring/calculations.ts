@@ -48,7 +48,7 @@ export function scoreBalanced(rate: number) {
 }
 
 export function calculateIndicatorScore(rate: number, direction: SpatialScoringDirection) {
-  if (direction === "INFORMATION_ONLY") return null;
+  if (direction === "INFORMATION_ONLY" || direction === "PERCENTILE_REFERENCE") return null;
   const score = direction === "HIGHER_IS_BETTER" ? scoreHigherIsBetter(rate) : direction === "LOWER_IS_BETTER" ? scoreLowerIsBetter(rate) : scoreBalanced(rate);
   return Math.min(5, Math.max(1, score));
 }
@@ -72,6 +72,7 @@ export function calculateCategoryScore(scores: IndicatorScoreResult[]) {
 
 export function formatScoreInterpretation(score: number | null, direction?: SpatialScoringDirection) {
   if (score === null) return "산출 불가";
+  if (direction === "PERCENTILE_REFERENCE") return score >= 5 ? "자치구 내 점포 수 규모 상위 20%" : score >= 4 ? "자치구 내 점포 수 규모 상위 40%" : score >= 3 ? "자치구 내 점포 수 규모 중간 구간" : score >= 2 ? "자치구 내 점포 수 규모 하위 40%" : "자치구 내 점포 수 규모 하위 20%";
   if (direction === "BALANCED") return score >= 4.5 ? "비교집단의 일반적 수준과 유사함" : score >= 2.5 ? "비교집단과 차이 관찰 필요" : "비교집단과 차이가 큼";
   if (score >= 4.5) return "비교집단보다 유리한 수준";
   if (score >= 3.5) return "비교집단보다 다소 유리한 수준";

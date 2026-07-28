@@ -98,7 +98,14 @@ export function calculateDashboardScores(indicators: DashboardIndicator[], offic
       };
       const comparisonRate = calculateComparisonRate(group.target.value, comparisonValue);
       if (group.target.value === null || comparisonValue === null || comparisonRate === null) return emptyResult(indicator, config, calculatedAt, "대상값 또는 비교값이 없어 비교율을 계산할 수 없습니다.", officialCodes);
-      const score = calculateIndicatorScore(comparisonRate, config.direction);
+      const allValues = [group.target.value, ...group.comparisons.map((value) => value.value)].filter((value): value is number => value !== null);
+      const percentileRank = allValues.length > 0
+        ? ((allValues.filter((value) => value < group.target.value!).length
+          + allValues.filter((value) => value === group.target.value).length * 0.5) / allValues.length) * 100
+        : null;
+      const score = config.direction === "PERCENTILE_REFERENCE" && percentileRank !== null
+        ? Math.min(5, Math.max(1, Math.ceil(percentileRank / 20)))
+        : calculateIndicatorScore(comparisonRate, config.direction);
       if (score === null) return emptyResult(indicator, config, calculatedAt, "정보 제공용 지표입니다.", officialCodes, true);
       const relaxedSource = group.target.geographicUnit === "LEGAL_DONG" || group.comparisons.some((value) => value.areaCode.startsWith("NAME:") || value.areaCode.startsWith("LEGAL:"));
       const relaxedSample = group.comparisons.length < config.minimumComparisonCount;
@@ -108,11 +115,6 @@ export function calculateDashboardScores(indicators: DashboardIndicator[], offic
         : relaxedSource
         ? `${formatComparisonScope(config.comparisonScope, officialCodes.targetDongName, officialCodes.targetDistrictName)} (명칭·법정동 기반 대체비교)`
         : formatComparisonScope(config.comparisonScope, officialCodes.targetDongName, officialCodes.targetDistrictName);
-      const allValues = [group.target.value, ...group.comparisons.map((value) => value.value)].filter((value): value is number => value !== null);
-      const percentileRank = allValues.length > 0
-        ? ((allValues.filter((value) => value < group.target.value!).length
-          + allValues.filter((value) => value === group.target.value).length * 0.5) / allValues.length) * 100
-        : null;
       return {
         indicatorCode: indicator.code, indicatorName: indicator.name, category: config.category, comparisonScope: config.comparisonScope,
         targetGeographicUnit: group.target.geographicUnit, comparisonGeographicUnit: group.target.geographicUnit,
@@ -121,7 +123,9 @@ export function calculateDashboardScores(indicators: DashboardIndicator[], offic
         scoreStatus: limitedDistrictComparison ? "LIMITED_DATA" : "CALCULATED",
         scoreReason: limitedDistrictComparison
           ? "현재 수집된 일부 행정동만을 기준으로 계산한 제한적 비교값입니다."
-          : relaxedSource || relaxedSample ? `엄격 비교 조건을 완화한 참고점수입니다.${relaxedSample ? ` 비교 대상은 권장 최소 ${config.minimumComparisonCount}개보다 적은 ${group.comparisons.length}개입니다.` : ""}` : null,
+          : config.direction === "PERCENTILE_REFERENCE"
+            ? "같은 자치구 내 점포 수 백분위를 5개 구간으로 환산한 상권 규모 참고점수입니다."
+            : relaxedSource || relaxedSample ? `엄격 비교 조건을 완화한 참고점수입니다.${relaxedSample ? ` 비교 대상은 권장 최소 ${config.minimumComparisonCount}개보다 적은 ${group.comparisons.length}개입니다.` : ""}` : null,
         direction: config.direction,
         targetValue: group.target.value, comparisonValue, comparisonMean, comparisonMedian, comparisonMethod: config.comparisonMethod,
         comparisonRate, difference: group.target.value - comparisonValue, comparisonCount: group.comparisons.length,

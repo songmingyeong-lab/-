@@ -1,7 +1,7 @@
 import type { IndicatorArea } from "@/lib/indicators/types";
 
 export type ComparisonScope = "GURO_DONG" | "SEOUL_DISTRICT" | "INFORMATION_ONLY";
-export type SpatialScoringDirection = "HIGHER_IS_BETTER" | "LOWER_IS_BETTER" | "BALANCED" | "INFORMATION_ONLY";
+export type SpatialScoringDirection = "HIGHER_IS_BETTER" | "LOWER_IS_BETTER" | "BALANCED" | "PERCENTILE_REFERENCE" | "INFORMATION_ONLY";
 export type ComparisonMethod = "MEAN" | "MEDIAN";
 export type ScoreStatus = "CALCULATED" | "LIMITED_DATA" | "NOT_CALCULABLE" | "INFORMATION_ONLY";
 export type SpatialGeographicUnit = "ADMINISTRATIVE_DONG" | "LEGAL_DONG" | "DISTRICT";

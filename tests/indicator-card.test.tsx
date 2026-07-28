@@ -37,14 +37,13 @@ describe("IndicatorCard", () => {
     expect(screen.getByText(/매일 1회/)).toBeInTheDocument();
   });
   it("renders the spatial comparison scope label", () => {
-    const source = getMockDashboardData().indicators.find((item) => item.code === "store_count")!;
-    const indicator = { ...source, code: "store_density", name: "1,000가구당 점포 수" };
+    const indicator = getMockDashboardData().indicators.find((item) => item.code === "store_count")!;
     const score = calculateDashboardScores([indicator], { targetDongCode: "1153059500", targetDistrictCode: "11530" })
       .find((category) => category.category === "상권 변화")!.indicatorScores
-      .find((item) => item.indicatorCode === "store_density")!;
+      .find((item) => item.indicatorCode === "store_count")!;
     render(<IndicatorCard indicator={indicator} score={score} />);
     expect(screen.getAllByText("가리봉동 대 구로구 다른 행정동").length).toBeGreaterThan(0);
-    expect(screen.getByText(/점수 산정식: 비교율 =/)).toBeInTheDocument();
+    expect(screen.getByText(/점수 산정식: 같은 자치구 내 점포 수 값의 백분위를 20% 단위/)).toBeInTheDocument();
     expect(screen.queryByText(/산정 방향:/)).not.toBeInTheDocument();
   });
 });

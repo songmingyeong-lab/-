@@ -21,5 +21,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ are
     data: indicator,
     comparisonAvailability: data.comparisonAvailability,
     scoreStatus: comparisonScoreStatus,
+    score: indicatorScore ?? null,
   });
 }

@@ -14,8 +14,8 @@ function storeIndicator(comparisonCount: number): DashboardIndicator {
   const source = getMockDashboardData().indicators.find((indicator) => indicator.code === "store_count")!;
   return {
     ...source,
-    code: "store_density",
-    name: "1,000가구당 점포 수",
+    code: "store_count",
+    name: "점포 수",
     value: 120,
     unit: "개",
     baseDate: "2026Q1",
@@ -38,20 +38,22 @@ describe("대시보드 공간비교 점수 조정", () => {
 
   it("GURO_DONG 비교군이 5~9개면 제한적 비교점수를 계산한다", () => {
     const categories = calculateDashboardScores([storeIndicator(5)], codes, "2026-07-19T00:00:00Z");
-    const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_density")!;
-    expect(score).toMatchObject({ score: 2, scoreStatus: "LIMITED_DATA", comparisonQuality: "low", comparisonCount: 5, comparisonMean: 100, comparisonRate: 20 });
+    const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_count")!;
+    expect(score).toMatchObject({ score: 5, scoreStatus: "LIMITED_DATA", comparisonQuality: "low", comparisonCount: 5, comparisonMean: 100, comparisonRate: 20, direction: "PERCENTILE_REFERENCE" });
+    expect(score.percentileRank).toBeCloseTo(91.67, 1);
     expect(score.scoreReason).toContain("제한적 비교값");
   });
 
   it("GURO_DONG 비교군이 10개 이상이면 정상 비교점수를 계산한다", () => {
     const categories = calculateDashboardScores([storeIndicator(10)], codes);
-    const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_density")!;
-    expect(score).toMatchObject({ score: 2, scoreStatus: "CALCULATED", comparisonQuality: "normal", comparisonCount: 10 });
+    const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_count")!;
+    expect(score).toMatchObject({ score: 5, scoreStatus: "CALCULATED", comparisonQuality: "normal", comparisonCount: 10, direction: "PERCENTILE_REFERENCE" });
+    expect(score.percentileRank).toBeCloseTo(95.45, 1);
   });
 
   it("GURO_DONG 비교군이 5개 미만이면 점수를 보류한다", () => {
     const categories = calculateDashboardScores([storeIndicator(4)], codes);
-    const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_density")!;
+    const score = categories.find((category) => category.category === "상권 변화")!.indicatorScores.find((item) => item.indicatorCode === "store_count")!;
     expect(score).toMatchObject({ score: null, scoreStatus: "NOT_CALCULABLE", comparisonCount: 4 });
     expect(score.scoreReason).toContain("상대점수를 산정하지 않았습니다");
   });
