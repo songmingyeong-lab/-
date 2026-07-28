@@ -197,7 +197,9 @@ export async function getDashboardData(areaSlug = DEFAULT_AREA_SLUG): Promise<Da
         collectedAt: latest?.collectedAt.toISOString() ?? null,
         updateCycle: definition.source.updateCycle,
         statusMessage: metadata?.statusMessage ?? latest?.errorMessage ?? definition.statusMessage,
-        proxyDescription: definition.proxyDescription,
+        proxyDescription: definition.code === "store_count"
+          ? "같은 자치구 내 점포 수 백분위를 1~5점으로 환산한 상권 규모 참고지표이며, 높고 낮음 자체가 상권의 질이나 성과를 뜻하지 않습니다."
+          : definition.proxyDescription,
         series: metadata?.series ?? [...definition.observations].reverse().map((observation) => ({
           date: formatSeoulDate(observation.baseDate),
           value: observation.value === null ? null : Number(observation.value),

@@ -178,7 +178,7 @@ export const commercialStoreAdapter: SourceAdapter = {
           unit: "개",
           status: target.THIRD_TOT === null ? "empty" as const : "success" as const,
           statusMessage: `서울시 상권분석서비스 지역별 현황의 ${quarterLabel(data.period)} 전체 생활밀접업종 점포 수입니다.`,
-          proxyDescription: "점수에 직접 반영하지 않는 상권 규모 원자료이며 상권의 질이나 주민 만족도를 직접 뜻하지 않습니다.",
+          proxyDescription: "같은 자치구 내 점포 수 백분위를 1~5점으로 환산한 상권 규모 참고지표이며, 높고 낮음 자체가 상권의 질이나 성과를 뜻하지 않습니다.",
           series: [
             { date: quarterLabel(firstQuarter), value: target.FIRST_TOT },
             { date: quarterLabel(previousQuarter), value: target.SECOND_TOT },
