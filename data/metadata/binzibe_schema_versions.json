@@ -1,0 +1,10 @@
+{
+  "apihome/state/list": {
+    "observed_at": "2026-07-27",
+    "version": 1,
+    "required_fields": ["reg", "sojaeji", "binCnt", "baseLevel"],
+    "optional_fields": ["year", "code", "name", "rnk", "sidoOrd"],
+    "geographic_unit": "legal_dong_name",
+    "period_precision": "year_only"
+  }
+}

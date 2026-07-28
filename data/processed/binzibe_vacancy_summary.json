@@ -1,0 +1,117 @@
+[
+  {
+    "admin_dong_code": "11530595",
+    "admin_dong_name": "가리봉동",
+    "base_year": 2026,
+    "vacant_house_count": 1.0,
+    "previous_period_change_rate": null,
+    "vacancy_ratio": null,
+    "long_term_vacancy_ratio": null,
+    "high_risk_vacancy_ratio": null,
+    "district_legal_dong_average": 9.5,
+    "district_comparison_count": 8,
+    "comparison_rate": -89.47368421052632,
+    "indicator_score": 5,
+    "planned_indicators": 5,
+    "available_indicators": 1,
+    "data_completeness": 20,
+    "comparison_availability": {
+      "previous_period": false,
+      "district_average": true,
+      "seoul_average": false
+    },
+    "note": "조사 기준은 2026년으로만 제공되어 base_date는 기간 식별용 연도 시작일입니다. 빈집애 법정동명이 대상 행정동명과 같지만, 출처 집계경계는 법정동 기준입니다."
+  },
+  {
+    "admin_dong_code": "11110670",
+    "admin_dong_name": "창신1동",
+    "base_year": 2026,
+    "vacant_house_count": 30.0,
+    "previous_period_change_rate": null,
+    "vacancy_ratio": null,
+    "long_term_vacancy_ratio": null,
+    "high_risk_vacancy_ratio": null,
+    "district_legal_dong_average": 4.636363636363637,
+    "district_comparison_count": 44,
+    "comparison_rate": 547.0588235294117,
+    "indicator_score": 1,
+    "planned_indicators": 5,
+    "available_indicators": 1,
+    "data_completeness": 20,
+    "comparison_availability": {
+      "previous_period": false,
+      "district_average": true,
+      "seoul_average": false
+    },
+    "note": "조사 기준은 2026년으로만 제공되어 base_date는 기간 식별용 연도 시작일입니다. 빈집애는 행정동이 아닌 창신동 법정동 전체만 제공합니다. 창신1동 독립값이 아니며 동일 법정동을 공유하는 행정동에 중복 표시되는 대체지표입니다."
+  },
+  {
+    "admin_dong_code": "11110680",
+    "admin_dong_name": "창신2동",
+    "base_year": 2026,
+    "vacant_house_count": 30.0,
+    "previous_period_change_rate": null,
+    "vacancy_ratio": null,
+    "long_term_vacancy_ratio": null,
+    "high_risk_vacancy_ratio": null,
+    "district_legal_dong_average": 4.636363636363637,
+    "district_comparison_count": 44,
+    "comparison_rate": 547.0588235294117,
+    "indicator_score": 1,
+    "planned_indicators": 5,
+    "available_indicators": 1,
+    "data_completeness": 20,
+    "comparison_availability": {
+      "previous_period": false,
+      "district_average": true,
+      "seoul_average": false
+    },
+    "note": "조사 기준은 2026년으로만 제공되어 base_date는 기간 식별용 연도 시작일입니다. 빈집애는 행정동이 아닌 창신동 법정동 전체만 제공합니다. 창신2동 독립값이 아니며 동일 법정동을 공유하는 행정동에 중복 표시되는 대체지표입니다."
+  },
+  {
+    "admin_dong_code": "11110690",
+    "admin_dong_name": "창신3동",
+    "base_year": 2026,
+    "vacant_house_count": 30.0,
+    "previous_period_change_rate": null,
+    "vacancy_ratio": null,
+    "long_term_vacancy_ratio": null,
+    "high_risk_vacancy_ratio": null,
+    "district_legal_dong_average": 4.636363636363637,
+    "district_comparison_count": 44,
+    "comparison_rate": 547.0588235294117,
+    "indicator_score": 1,
+    "planned_indicators": 5,
+    "available_indicators": 1,
+    "data_completeness": 20,
+    "comparison_availability": {
+      "previous_period": false,
+      "district_average": true,
+      "seoul_average": false
+    },
+    "note": "조사 기준은 2026년으로만 제공되어 base_date는 기간 식별용 연도 시작일입니다. 빈집애는 행정동이 아닌 창신동 법정동 전체만 제공합니다. 창신3동 독립값이 아니며 동일 법정동을 공유하는 행정동에 중복 표시되는 대체지표입니다."
+  },
+  {
+    "admin_dong_code": "11110700",
+    "admin_dong_name": "숭인1동",
+    "base_year": 2026,
+    "vacant_house_count": 5.0,
+    "previous_period_change_rate": null,
+    "vacancy_ratio": null,
+    "long_term_vacancy_ratio": null,
+    "high_risk_vacancy_ratio": null,
+    "district_legal_dong_average": 5.204545454545454,
+    "district_comparison_count": 44,
+    "comparison_rate": -3.930131004366805,
+    "indicator_score": 3,
+    "planned_indicators": 5,
+    "available_indicators": 1,
+    "data_completeness": 20,
+    "comparison_availability": {
+      "previous_period": false,
+      "district_average": true,
+      "seoul_average": false
+    },
+    "note": "조사 기준은 2026년으로만 제공되어 base_date는 기간 식별용 연도 시작일입니다. 빈집애는 행정동이 아닌 숭인동 법정동 전체만 제공합니다. 숭인1동 독립값이 아니며 동일 법정동을 공유하는 행정동에 중복 표시되는 대체지표입니다."
+  }
+]

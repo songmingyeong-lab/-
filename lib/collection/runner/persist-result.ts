@@ -37,6 +37,52 @@ export async function persistAdapterResult(areaSlug: string, result: AdapterResu
         update: { value: indicator.value, geographicUnit: indicator.geographicUnit, collectedAt: new Date(), status: observationStatus, sourceReference: indicator.sourceUrl, metadata: { series: indicator.series, statusMessage: indicator.statusMessage, spatialComparison: indicator.spatialComparison } as unknown as Prisma.InputJsonValue },
         create: { areaId: area.id, indicatorId: definition.id, value: indicator.value, baseDate: new Date(`${indicator.baseDate}T00:00:00+09:00`), aggregationKey: "total", geographicUnit: indicator.geographicUnit, status: observationStatus, sourceReference: indicator.sourceUrl, metadata: { series: indicator.series, statusMessage: indicator.statusMessage, spatialComparison: indicator.spatialComparison } as unknown as Prisma.InputJsonValue },
       });
+      if (result.sourceCode === "vacant-house") {
+        const baseDate = new Date(`${indicator.baseDate}T00:00:00+09:00`);
+        await prisma.vacancyAreaIndicator.upsert({
+          where: {
+            adminDongCode_baseDate_indicatorCode_vacancyGrade_housingType: {
+              adminDongCode: area.administrativeDongCode ?? area.slug,
+              baseDate,
+              indicatorCode: indicator.code,
+              vacancyGrade: "",
+              housingType: "",
+            },
+          },
+          update: {
+            value: indicator.value,
+            collectedAt: new Date(),
+            dataQualityNote: indicator.statusMessage ?? indicator.proxyDescription,
+            metadataJson: {
+              geographicUnit: indicator.geographicUnit,
+              spatialComparison: indicator.spatialComparison,
+              periodPrecision: "YEAR_ONLY",
+            } as unknown as Prisma.InputJsonValue,
+          },
+          create: {
+            areaId: area.id,
+            sidoCode: area.administrativeDongCode?.slice(0, 2) ?? "11",
+            districtCode: area.administrativeDongCode?.slice(0, 5) ?? "",
+            adminDongCode: area.administrativeDongCode ?? area.slug,
+            adminDongName: area.administrativeDongName ?? area.dongName,
+            projectName: area.projectName,
+            baseDate,
+            indicatorCode: indicator.code,
+            indicatorName: indicator.name,
+            value: indicator.value,
+            unit: indicator.unit,
+            source: indicator.source,
+            sourceUrl: indicator.sourceUrl,
+            sourceMethod: "ajax",
+            dataQualityNote: indicator.statusMessage ?? indicator.proxyDescription,
+            metadataJson: {
+              geographicUnit: indicator.geographicUnit,
+              spatialComparison: indicator.spatialComparison,
+              periodPrecision: "YEAR_ONLY",
+            } as unknown as Prisma.InputJsonValue,
+          },
+        });
+      }
       saved += 1;
     }
     if (saveRaw) {

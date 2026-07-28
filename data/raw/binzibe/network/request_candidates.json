@@ -1,0 +1,69 @@
+[
+  {
+    "url": "https://www.binzibe.kr/main/config.json",
+    "method": "GET",
+    "status": 200,
+    "resource_type": "fetch",
+    "content_type": "application/json",
+    "query_parameters": {},
+    "cookie_or_session_present_in_observed_request": false,
+    "cookie_or_session_required": false
+  },
+  {
+    "url": "https://www.binzibe.kr/main/html/_common_header.html",
+    "method": "GET",
+    "status": 200,
+    "resource_type": "fetch",
+    "content_type": "text/html; charset=utf-8",
+    "query_parameters": {},
+    "cookie_or_session_present_in_observed_request": false,
+    "cookie_or_session_required": false
+  },
+  {
+    "url": "https://www.binzibe.kr/apihome/map/filter-options",
+    "method": "GET",
+    "status": 200,
+    "resource_type": "fetch",
+    "content_type": "application/json",
+    "query_parameters": {},
+    "cookie_or_session_present_in_observed_request": false,
+    "cookie_or_session_required": false
+  },
+  {
+    "url": "https://www.binzibe.kr/apihome/map/vacant-houses/rank?year=2026&mapInfo=VACANT_COUNT",
+    "method": "GET",
+    "status": 200,
+    "resource_type": "fetch",
+    "content_type": "application/json",
+    "query_parameters": {
+      "year": "2026",
+      "mapInfo": "VACANT_COUNT"
+    },
+    "cookie_or_session_present_in_observed_request": true,
+    "cookie_or_session_required": false
+  },
+  {
+    "url": "https://www.binzibe.kr/apihome/map/codes/sigungu?sidoCode=11",
+    "method": "GET",
+    "status": 200,
+    "resource_type": "fetch",
+    "content_type": "application/json",
+    "query_parameters": {
+      "sidoCode": "11"
+    },
+    "cookie_or_session_present_in_observed_request": true,
+    "cookie_or_session_required": false
+  },
+  {
+    "url": "https://www.binzibe.kr/apihome/state/list?year=2026",
+    "method": "GET",
+    "status": 200,
+    "resource_type": "fetch",
+    "content_type": "application/json",
+    "query_parameters": {
+      "year": "2026"
+    },
+    "cookie_or_session_present_in_observed_request": true,
+    "cookie_or_session_required": false
+  }
+]

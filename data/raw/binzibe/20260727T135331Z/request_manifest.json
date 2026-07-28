@@ -1,0 +1,21 @@
+{
+  "collected_at": "2026-07-27T13:53:31.853199+00:00",
+  "source": "https://www.binzibe.kr/main/html/map.html",
+  "method": "ajax",
+  "requests": [
+    {
+      "url": "https://www.binzibe.kr/apihome/map/filter-options",
+      "status": 200,
+      "content_type": "application/json",
+      "file": "data\\raw\\binzibe\\20260727T135331Z\\response_filter_options.json"
+    },
+    {
+      "url": "https://www.binzibe.kr/apihome/state/list?year=2026",
+      "status": 200,
+      "content_type": "application/json",
+      "file": "data\\raw\\binzibe\\20260727T135331Z\\response_state_list_2026.json",
+      "request_hash": "1add82a0f6cf64e6fa60d9fa8988430fae94a8f1f107993ce98f248c4ae47e07"
+    }
+  ],
+  "privacy": "개별 주소·좌표·건물 식별정보를 수집하지 않음"
+}

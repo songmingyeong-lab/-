@@ -1,4 +1,5 @@
 import { buildingRegisterAdapter } from "./building-register";
+import { binzibeVacancyAdapter } from "./binzibe-vacancy";
 import { commercialStoreAdapter } from "./commercial-store";
 import { commercialOpeningMarketAdapter } from "./commercial-opening-market";
 import { commercialRentMarketAdapter } from "./commercial-rent-market";
@@ -11,4 +12,4 @@ import { rentalTransactionAdapter } from "./rental-transaction";
 import { residentPopulationAdapter } from "./resident-population";
 import { roadExcavationAdapter } from "./road-excavation";
 
-export const sourceAdapters = [buildingRegisterAdapter, commercialStoreAdapter, commercialOpeningMarketAdapter, commercialRentMarketAdapter, incomeConsumptionAdapter, residentPopulationAdapter, floatingPopulationAdapter, rentalTransactionAdapter, estimatedSalesAdapter, roadExcavationAdapter, noiseComplaintAdapter, publicServiceReservationAdapter];
+export const sourceAdapters = [buildingRegisterAdapter, binzibeVacancyAdapter, commercialStoreAdapter, commercialOpeningMarketAdapter, commercialRentMarketAdapter, incomeConsumptionAdapter, residentPopulationAdapter, floatingPopulationAdapter, rentalTransactionAdapter, estimatedSalesAdapter, roadExcavationAdapter, noiseComplaintAdapter, publicServiceReservationAdapter];

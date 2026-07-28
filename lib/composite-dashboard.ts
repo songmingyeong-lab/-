@@ -107,6 +107,16 @@ function aggregateValue(code: string, members: DashboardData[]) {
     }
     return byLegalDong.size === 2 ? [...byLegalDong.values()].reduce((sum, value) => sum + value, 0) : null;
   }
+  if (code === "vacant_house_count") {
+    const byLegalDong = new Map<string, number>();
+    for (const member of members) {
+      const value = member.indicators.find((item) => item.code === code)?.value;
+      if (value !== null && value !== undefined && !byLegalDong.has(member.area.legalDongCode ?? member.area.legalDongName)) {
+        byLegalDong.set(member.area.legalDongCode ?? member.area.legalDongName, value);
+      }
+    }
+    return byLegalDong.size === 2 ? [...byLegalDong.values()].reduce((sum, value) => sum + value, 0) : null;
+  }
   if (DISTRICT_PROXY_CODES.has(code)) return valuesFor(code, members)[0] ?? null;
   return null;
 }

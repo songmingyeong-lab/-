@@ -1,0 +1,67 @@
+[
+  {
+    "slug": "garibong",
+    "sido_name": "서울특별시",
+    "district_name": "구로구",
+    "admin_dong_name": "가리봉동",
+    "sido_code": "11",
+    "district_code": "11530",
+    "admin_dong_code": "11530595",
+    "source_legal_dong_name": "가리봉동",
+    "source_legal_dong_code": "1153010300",
+    "project_name": "가리봉 도시재생사업",
+    "enabled": true
+  },
+  {
+    "slug": "changsin-1",
+    "sido_name": "서울특별시",
+    "district_name": "종로구",
+    "admin_dong_name": "창신1동",
+    "sido_code": "11",
+    "district_code": "11110",
+    "admin_dong_code": "11110670",
+    "source_legal_dong_name": "창신동",
+    "source_legal_dong_code": "1111017400",
+    "project_name": "창신·숭인 도시재생사업",
+    "enabled": true
+  },
+  {
+    "slug": "changsin-2",
+    "sido_name": "서울특별시",
+    "district_name": "종로구",
+    "admin_dong_name": "창신2동",
+    "sido_code": "11",
+    "district_code": "11110",
+    "admin_dong_code": "11110680",
+    "source_legal_dong_name": "창신동",
+    "source_legal_dong_code": "1111017400",
+    "project_name": "창신·숭인 도시재생사업",
+    "enabled": true
+  },
+  {
+    "slug": "changsin-3",
+    "sido_name": "서울특별시",
+    "district_name": "종로구",
+    "admin_dong_name": "창신3동",
+    "sido_code": "11",
+    "district_code": "11110",
+    "admin_dong_code": "11110690",
+    "source_legal_dong_name": "창신동",
+    "source_legal_dong_code": "1111017400",
+    "project_name": "창신·숭인 도시재생사업",
+    "enabled": true
+  },
+  {
+    "slug": "sungin-1",
+    "sido_name": "서울특별시",
+    "district_name": "종로구",
+    "admin_dong_name": "숭인1동",
+    "sido_code": "11",
+    "district_code": "11110",
+    "admin_dong_code": "11110700",
+    "source_legal_dong_name": "숭인동",
+    "source_legal_dong_code": "1111017500",
+    "project_name": "창신·숭인 도시재생사업",
+    "enabled": true
+  }
+]

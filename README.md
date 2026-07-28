@@ -226,3 +226,22 @@ Invoke-RestMethod -Method Post -Uri "https://여기에-배포도메인/api/colle
 ```
 
 `area`는 `garibong`, `changsin-1`, `changsin-2`, `changsin-3`, `sungin-1` 중 하나입니다. `cycle`은 `daily`, `monthly`, `quarterly` 중 하나입니다. 특정 수집기만 실행하려면 body에서 `cycle` 대신 `source`를 사용합니다. 수집 응답과 로그에는 원본 API payload를 포함하지 않습니다.
+
+## 빈집애 빈집행정조사 보조지표
+
+빈집애 공개 지도에서 실제 브라우저 요청을 확인한 뒤 공개 집계 AJAX만 재현합니다.
+서울열린데이터광장 API, 개별 주소, 좌표, 건물 식별정보는 사용하지 않습니다.
+
+```powershell
+python -m pip install -r requirements.txt
+python scripts/inspect_binzibe_network.py --headless --save-har
+python scripts/collect_binzibe_vacancy.py --all-targets --request-delay 1
+python scripts/process_binzibe_indicators.py
+npm.cmd run collect:live -- --source vacant-house
+```
+
+실제 요청 구조와 공간단위 제약은
+[`docs/binzibe-network-analysis.md`](docs/binzibe-network-analysis.md)에 기록했습니다.
+빈집애는 행정동별 값이 아니라 법정동별 집계만 제공하므로 창신1·2·3동은 창신동
+전체값, 숭인1동은 숭인동 전체값을 명시적인 대체지표로 표시합니다. 빈집 비율·등급·
+주택유형·증감률은 동일 출처 원자료가 없으면 계산하지 않습니다.

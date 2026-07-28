@@ -65,8 +65,39 @@ model Area {
   metadata               Json?
   observations           IndicatorObservation[]
   rawData                RawPublicData[]
+  vacancyIndicators      VacancyAreaIndicator[]
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
+}
+
+model VacancyAreaIndicator {
+  id              String   @id @default(cuid())
+  areaId          String?
+  sidoCode        String
+  districtCode    String
+  adminDongCode   String
+  adminDongName   String
+  projectName     String?
+  baseDate        DateTime
+  indicatorCode   String
+  indicatorName   String
+  value           Decimal? @db.Decimal(20, 4)
+  unit            String
+  vacancyGrade    String   @default("")
+  housingType     String   @default("")
+  source          String
+  sourceUrl       String
+  sourceMethod    String
+  sourceUpdatedAt DateTime?
+  collectedAt     DateTime @default(now())
+  dataQualityNote String
+  metadataJson    Json?
+  area            Area?    @relation(fields: [areaId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([adminDongCode, baseDate, indicatorCode, vacancyGrade, housingType])
+  @@index([adminDongCode, baseDate])
 }
 
 model DataSource {
